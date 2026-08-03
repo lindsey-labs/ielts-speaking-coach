@@ -1,0 +1,4 @@
+interface:
+  display_name: "IELTS Speaking Coach"
+  short_description: "Voice IELTS practice with reviews and retraining"
+  default_prompt: "Use $ielts-speaking-coach to start an IELTS speaking practice session."

@@ -1,0 +1,112 @@
+{
+  "title": "Open sample IELTS-style question bank",
+  "sourceUrl": "",
+  "importedAt": "2026-08-04T00:00:00.000Z",
+  "importLevel": "full-question",
+  "part1": [
+    {
+      "raw": "Daily routines",
+      "questions": [
+        "What part of your daily routine do you enjoy most?",
+        "Has your routine changed recently?"
+      ]
+    },
+    {
+      "raw": "Learning",
+      "questions": [
+        "What is something you enjoy learning about?",
+        "How do you usually learn new things?"
+      ]
+    },
+    {
+      "raw": "Neighbourhood",
+      "questions": [
+        "What do you like about your neighbourhood?",
+        "Is there anything you would like to improve there?"
+      ]
+    },
+    {
+      "raw": "Free time",
+      "questions": [
+        "What do you usually do in your free time?",
+        "Do you prefer spending free time alone or with others?"
+      ]
+    },
+    {
+      "raw": "Technology",
+      "questions": [
+        "What piece of technology do you use most often?",
+        "How does it help you?"
+      ]
+    },
+    {
+      "raw": "Food",
+      "questions": [
+        "What kind of food do you enjoy eating?",
+        "Do you often cook for yourself?"
+      ]
+    }
+  ],
+  "part23": [
+    {
+      "raw": "A useful skill",
+      "part2Questions": [
+        "Describe a useful skill you learned. You should say what it is, how you learned it, and why it is useful."
+      ],
+      "part3Questions": [
+        "Which practical skills should schools teach?",
+        "Do people learn skills differently as adults?"
+      ]
+    },
+    {
+      "raw": "A memorable place",
+      "part2Questions": [
+        "Describe a place you remember well. You should say where it is, when you went there, and why you remember it."
+      ],
+      "part3Questions": [
+        "Why do some places become important to people?",
+        "How can cities protect places with cultural value?"
+      ]
+    },
+    {
+      "raw": "A helpful person",
+      "part2Questions": [
+        "Describe a person who helped you. You should say who the person is, what they did, and how you felt."
+      ],
+      "part3Questions": [
+        "Why is cooperation important in society?",
+        "Should people be rewarded for helping others?"
+      ]
+    },
+    {
+      "raw": "A change in your life",
+      "part2Questions": [
+        "Describe a positive change in your life. You should say what changed, why it happened, and how it affected you."
+      ],
+      "part3Questions": [
+        "Why do some people find change difficult?",
+        "How can organisations help people adapt to change?"
+      ]
+    },
+    {
+      "raw": "An interesting activity",
+      "part2Questions": [
+        "Describe an activity you found interesting. You should say what it was, when you did it, and why it interested you."
+      ],
+      "part3Questions": [
+        "What makes an activity engaging?",
+        "Do leisure activities need to be productive?"
+      ]
+    },
+    {
+      "raw": "A useful object",
+      "part2Questions": [
+        "Describe an object you use regularly. You should say what it is, how you use it, and why it is useful."
+      ],
+      "part3Questions": [
+        "Why do people replace useful objects?",
+        "How can product design reduce waste?"
+      ]
+    }
+  ]
+}

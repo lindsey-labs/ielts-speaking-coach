@@ -1,0 +1,36 @@
+# Dependencies and build outputs
+node_modules/
+release/
+dist/
+*.log
+
+# Local learner data and recordings
+data/
+recordings/
+reports/
+pending-reviews/
+state*.json
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+
+# Private source material and generated OCR artifacts
+.reference/
+outputs/
+demo/*.png
+mcp/question-bank-2026-may-aug.json
+scripts/build-question-bank-from-ocr.mjs
+ocr-results*.json
+tmp-*
+.qa-*
+
+# Separate local website workspace (has its own Git history and build state)
+website/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

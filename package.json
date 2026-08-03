@@ -1,0 +1,83 @@
+{
+  "name": "ielts-speaking-coach-local-mcp",
+  "version": "0.1.48",
+  "private": true,
+  "type": "module",
+  "description": "Local MCP server for IELTS Speaking Coach practice state and review reports.",
+  "scripts": {
+    "start": "node mcp/server.mjs",
+    "dashboard": "node mcp/server.mjs --dashboard-only",
+    "desktop": "electron desktop/main.mjs",
+    "desktop:dev": "electron desktop/main.mjs --dev",
+    "package:win": "electron-builder --win --x64",
+    "package:mac": "electron-builder --mac",
+    "initialize:local": "node mcp/initialize-local.mjs",
+    "test:mcp": "node mcp/test-client.mjs",
+    "test:desktop-flow": "node mcp/test-desktop-flow.mjs",
+    "test:review-parser": "node desktop/review-parser.test.mjs",
+    "test:answer-policy": "node desktop/answer-upgrade-policy.test.mjs",
+    "test:voice-end": "node desktop/voice-end-policy.test.mjs",
+    "test:review-controls": "node desktop/review-controls.test.mjs"
+  },
+  "main": "desktop/main.mjs",
+  "build": {
+    "appId": "com.ielts.speakingcoach",
+    "productName": "IELTS Speaking Coach",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**",
+      "demo/dashboard.html",
+      "mcp/**",
+      "skills/**",
+      "package.json",
+      "node_modules/**",
+      "!mcp/*.test.mjs",
+      "!mcp/test-*.mjs",
+      "!desktop/*.test.mjs"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "IELTS-Speaking-Coach-${version}-Setup.${ext}"
+    },
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "artifactName": "IELTS-Speaking-Coach-${version}-macOS-${arch}.${ext}",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "IELTS Speaking Coach needs microphone access to record your spoken practice locally."
+      }
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.5",
+    "jsonrepair": "^3.15.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "electron": "^38.3.0",
+    "electron-builder": "^26.0.12"
+  }
+}
