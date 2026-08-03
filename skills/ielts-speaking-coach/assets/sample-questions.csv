@@ -1,0 +1,6 @@
+id,part,topic,prompt,followups
+p1-home-001,1,Home,What do you like most about your home?,
+p1-work-001,1,Work and study,What would you like to change about your work or studies?,
+p2-skill-001,2,Skills,Describe a useful skill you learned,"How you learned it|Why it is useful"
+p3-education-001,3,Education,Should schools teach more practical skills?,"Which skills matter most?|Who should decide the curriculum?"
+p3-technology-001,3,Technology,Has technology made communication better?,"Who benefits most?|Could it create new problems?"

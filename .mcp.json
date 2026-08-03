@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ielts-speaking-coach": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs"
+      ],
+      "cwd": "."
+    }
+  }
+}

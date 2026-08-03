@@ -1,0 +1,1757 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IELTS Speaking Coach Dashboard v1</title>
+  <style>
+    :root {
+      --artboard-width: 1440px;
+      --artboard-height: 1024px;
+      --page-bg: #e8e6f0;
+      --ink: #211f2d;
+      --muted: #777486;
+      --line: #e5e2ed;
+      --panel: #ffffff;
+      --purple: #6957e8;
+      --purple-dark: #2c234e;
+      --purple-soft: #f0edff;
+      --orange: #ff9861;
+      --green: #31a578;
+      --red: #e35d6a;
+      --shadow: 0 18px 48px rgba(49, 40, 91, .10);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    button { font: inherit; }
+    body {
+      background: var(--page-bg);
+      color: var(--ink);
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    .workspace { width: max-content; margin: 28px auto 48px; }
+    .artboard {
+      position: relative;
+      display: grid;
+      grid-template-columns: 244px 1fr;
+      width: var(--artboard-width);
+      height: var(--artboard-height);
+      overflow: clip;
+      background: #f6f5fa;
+      isolation: isolate;
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 30px 22px 24px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 25% 5%, rgba(144, 122, 255, .45), transparent 25%),
+        linear-gradient(165deg, #352b63 0%, #241d42 70%, #1f1939 100%);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin: 0 8px 34px; }
+    .brand-mark {
+      display: grid;
+      width: 40px; height: 40px;
+      place-items: center;
+      border-radius: 13px;
+      color: #30255b;
+      background: #fff;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+    .brand-copy strong { display: block; font-size: 15px; }
+    .brand-copy span { display: block; margin-top: 3px; color: #bbb2df; font-size: 11px; }
+
+    .nav-label {
+      margin: 0 10px 9px;
+      color: #8f86b8;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    .nav { display: grid; gap: 7px; }
+    .nav-button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 13px;
+      border: 0;
+      border-radius: 12px;
+      color: #cfc8e8;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .nav-button:hover { background: rgba(255,255,255,.06); }
+    .nav-button.active { color: #fff; background: rgba(255,255,255,.12); }
+    .nav-icon {
+      display: grid;
+      width: 28px; height: 28px;
+      place-items: center;
+      border-radius: 9px;
+      color: currentColor;
+      background: rgba(255,255,255,.08);
+      font-size: 14px;
+    }
+    .nav-button.active .nav-icon { color: #342a64; background: #fff; }
+    .nav-button span:last-child { font-size: 13px; font-weight: 700; }
+    .nav-button.upgrade-entry {
+      margin-top: 5px;
+      color: #fff4df;
+      background: linear-gradient(90deg, rgba(255,152,97,.19), rgba(255,255,255,.07));
+      border: 1px solid rgba(255,196,135,.22);
+    }
+    .nav-button.upgrade-entry:hover { background: linear-gradient(90deg, rgba(255,152,97,.28), rgba(255,255,255,.10)); }
+    .nav-button.upgrade-entry .nav-icon { color: #5c3b25; background: #ffd6a6; font-weight: 900; }
+    .nav-button-copy { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: 8px; }
+    .nav-button-copy em { padding: 2px 6px; border-radius: 999px; color: #5c3b25; background: #ffd6a6; font-size: 8px; font-style: normal; font-weight: 900; letter-spacing: .08em; }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      width: 100%;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      color: #fff;
+      background: rgba(255,255,255,.06);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .sidebar-bottom:hover { background: rgba(255,255,255,.10); }
+    .sidebar-bottom b { display: block; font-size: 12px; }
+    .sidebar-bottom p { margin: 7px 0 12px; color: #bcb4db; font-size: 11px; line-height: 1.55; }
+    .mini-progress { height: 5px; overflow: hidden; border-radius: 9px; background: rgba(255,255,255,.12); }
+    .mini-progress span { display: block; width: 0; height: 100%; border-radius: inherit; background: #a99cf9; transition: width .25s ease; }
+
+    .main { position: relative; overflow: hidden; padding: 30px 38px 34px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; height: 48px; }
+    .eyebrow { margin: 0 0 4px; color: var(--purple); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+    .topbar h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .status-pill {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #575365;
+      background: #fff;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(49,165,120,.12); }
+    .avatar {
+      display: grid; width: 38px; height: 38px; place-items: center;
+      border-radius: 50%;
+      color: #fff; background: linear-gradient(140deg, #9a87ff, #5846d5);
+      font-size: 12px; font-weight: 900;
+    }
+
+    .view { display: none; height: calc(100% - 62px); padding-top: 22px; }
+    .view.active { display: block; }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1.5fr .85fr;
+      gap: 20px;
+    }
+    .practice-card {
+      position: relative;
+      min-height: 274px;
+      overflow: clip;
+      padding: 30px;
+      border-radius: 24px;
+      color: #fff;
+      background:
+        radial-gradient(circle at 92% 20%, rgba(255,255,255,.16), transparent 29%),
+        linear-gradient(135deg, #705cf0 0%, #5540d2 100%);
+      box-shadow: 0 18px 36px rgba(90,70,205,.24);
+    }
+    .practice-card::after {
+      content: "";
+      position: absolute;
+      right: -56px; bottom: -80px;
+      width: 240px; height: 240px;
+      border: 34px solid rgba(255,255,255,.06);
+      border-radius: 50%;
+    }
+    .practice-kicker { position: relative; z-index: 1; color: #d9d3ff; font-size: 11px; font-weight: 900; letter-spacing: .11em; }
+    .practice-card h2 { position: relative; z-index: 1; max-width: 500px; margin: 13px 0 10px; font-size: 30px; line-height: 1.25; letter-spacing: -.02em; }
+    .practice-card p { position: relative; z-index: 1; max-width: 520px; margin: 0; color: #e6e2ff; font-size: 13px; line-height: 1.65; }
+    .today-plan-route { position: relative; z-index: 1; display: none; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 15px; padding: 12px 14px; border: 1px solid rgba(255,221,184,.72); border-radius: 14px; color: #fff; background: linear-gradient(90deg, rgba(255,152,97,.34), rgba(255,255,255,.13)); text-align: left; cursor: pointer; }
+    .today-plan-route.visible { display: grid; }
+    .today-plan-route:hover { background: linear-gradient(90deg, rgba(255,152,97,.44), rgba(255,255,255,.18)); }
+    .today-plan-route.completed { border-color: rgba(207,255,234,.45); background: rgba(49,165,120,.20); cursor: default; }
+    .today-plan-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #5b45cd; background: #fff; font-size: 15px; font-weight: 900; }
+    .today-plan-copy b { display: block; font-size: 11px; }
+    .today-plan-copy span { display: block; max-width: 500px; margin-top: 4px; overflow: hidden; color: #f3efff; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+    .today-plan-action { padding: 8px 10px; border-radius: 9px; color: #5944ca; background: #fff; font-size: 9px; font-weight: 900; white-space: nowrap; }
+    .route-grid {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin-top: 18px;
+    }
+    .route-button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 12px;
+      color: #fff;
+      background: rgba(255,255,255,.09);
+      text-align: left;
+      cursor: pointer;
+    }
+    .route-button:hover { background: rgba(255,255,255,.16); }
+    .route-button.recommended { border-color: rgba(255,201,168,.65); background: rgba(255,152,97,.18); }
+    .route-icon {
+      display: grid; flex: 0 0 auto;
+      width: 30px; height: 30px;
+      place-items: center;
+      border-radius: 9px;
+      color: #5440cb;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .route-copy b { display: block; font-size: 10px; }
+    .route-copy span { display: block; margin-top: 3px; color: #ddd8ff; font-size: 8px; }
+    .practice-meta { position: relative; z-index: 1; display: flex; gap: 9px; margin: 19px 0 20px; }
+    .meta-chip { padding: 7px 10px; border: 1px solid rgba(255,255,255,.17); border-radius: 9px; background: rgba(255,255,255,.09); font-size: 10px; font-weight: 800; }
+    .primary-button {
+      position: relative; z-index: 1;
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 12px 18px;
+      border: 0; border-radius: 12px;
+      color: #4d38c5; background: #fff;
+      font-size: 12px; font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 9px 20px rgba(45,28,119,.22);
+    }
+    .primary-button:hover { transform: translateY(-1px); }
+
+    .week-card, .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: 0 8px 28px rgba(51,45,80,.05);
+    }
+    .week-card { padding: 23px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .panel-head h3 { margin: 0; font-size: 14px; }
+    .link-button { border: 0; color: var(--purple); background: transparent; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .week-score { display: flex; align-items: flex-end; gap: 7px; margin-bottom: 19px; }
+    .week-score strong { font-size: 39px; line-height: 1; }
+    .week-score span { padding-bottom: 4px; color: var(--muted); font-size: 11px; }
+    .week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 93px; }
+    .bar-wrap { display: grid; align-items: end; gap: 7px; height: 100%; text-align: center; }
+    .bar { width: 100%; min-height: 8px; border-radius: 8px 8px 3px 3px; background: #e9e6f7; }
+    .bar.done { background: linear-gradient(#8d7cf5, #6856e4); }
+    .bar.today { background: linear-gradient(#ffb081, #ff8f58); }
+    .bar-label { color: #9a96a8; font-size: 9px; font-weight: 800; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
+    .stat-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+    }
+    .stat-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: var(--purple-soft); font-size: 16px; }
+    .stat-card:nth-child(2) .stat-icon { background: #fff0e8; }
+    .stat-card:nth-child(3) .stat-icon { background: #e8f7f1; }
+    .stat-value { display: block; font-size: 18px; font-weight: 900; }
+    .stat-label { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; font-weight: 700; }
+
+    .lower-grid { display: grid; grid-template-columns: 1.18fr .82fr; gap: 18px; margin-top: 18px; }
+    .panel { padding: 20px; }
+    .target-row {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 13px 0;
+      border-top: 1px solid #efedf3;
+    }
+    .target-row:first-of-type { border-top: 0; padding-top: 0; }
+    .target-number { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 10px; color: var(--purple); background: var(--purple-soft); font-size: 10px; font-weight: 900; }
+    .target-copy b { display: block; font-size: 11px; }
+    .target-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .status-tag { padding: 6px 8px; border-radius: 8px; font-size: 8px; font-weight: 900; white-space: nowrap; }
+    .status-tag.training { color: #7c4b18; background: #fff1df; }
+    .status-tag.improved { color: #20775c; background: #e4f7ef; }
+    .status-tag.new { color: #7a49ca; background: #f0e7ff; }
+
+    .session-list { display: grid; gap: 10px; }
+    .session-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 13px;
+      border-radius: 13px;
+      background: #f8f7fb;
+    }
+    .session-left { display: flex; align-items: center; gap: 10px; }
+    .part-badge { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; color: #fff; background: #7765ea; font-size: 9px; font-weight: 900; }
+    .session-copy b { display: block; font-size: 10px; }
+    .session-copy span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; }
+    .session-arrow { color: #aaa5b8; font-size: 15px; }
+
+    .section-subtitle { margin: 0 0 20px; color: var(--muted); font-size: 11px; }
+    .report-grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 18px; }
+    .report-date-list { display: grid; gap: 10px; max-height: 840px; overflow-y: auto; padding-right: 5px; margin: 0 0 16px; scrollbar-width: thin; }
+    .report-date-button { padding: 8px 11px; border: 1px solid var(--line); border-radius: 999px; color: #686272; background: #fff; font-size: 10px; font-weight: 800; cursor: pointer; }
+    .report-date-button.active { border-color: #7765f2; color: #5746d8; background: #f0edff; }
+    .report-scroll { height: 830px; padding-right: 4px; overflow-y: auto; scrollbar-width: thin; }
+    .report-accordion { border: 1px solid var(--line); border-radius: 17px; background: #fff; overflow: hidden; }
+    .report-accordion[open] { border-color: #d5cff4; box-shadow: 0 10px 28px rgba(67,54,137,.07); }
+    .report-accordion summary { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 17px 19px; cursor: pointer; list-style: none; }
+    .report-accordion summary::-webkit-details-marker { display: none; }
+    .accordion-chevron { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: var(--purple); background: var(--purple-soft); font-size: 16px; font-weight: 900; transition: transform .2s ease; }
+    .report-accordion[open] .accordion-chevron { transform: rotate(90deg); }
+    .accordion-title b { display: block; font-size: 12px; }
+    .accordion-title span { display: block; max-width: 720px; margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .accordion-meta { color: var(--muted); font-size: 9px; font-weight: 800; }
+    .report-accordion-body { padding: 0 18px 18px; border-top: 1px solid #efedf3; }
+    .report-accordion-body .report-grid { margin-top: 18px; }
+    .report-accordion-body .report-scroll { height: auto; overflow: visible; }
+    .report-side { display: grid; gap: 14px; align-content: start; }
+    .report-side .focus-card { position: static; }
+    .daily-report-session { padding-top: 18px; }
+    .daily-report-session + .daily-report-session { margin-top: 22px; border-top: 2px solid #e8e3f7; }
+    .daily-session-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    .daily-session-heading b { max-width: 820px; font-size: 11px; line-height: 1.55; }
+    .daily-session-heading span { flex: 0 0 auto; color: var(--muted); font-size: 9px; }
+    .recording-player { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; gap: 12px; align-items: center; margin: 12px 0 16px; padding: 13px 14px; border: 1px solid #ddd7f5; border-radius: 14px; background: linear-gradient(135deg, #f8f6ff, #fff); }
+    .recording-label { display: flex; align-items: center; gap: 8px; color: #5141bd; font-size: 10px; font-weight: 900; white-space: nowrap; }
+    .recording-label::before { content: "▶"; display: grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: #fff; background: var(--purple); font-size: 8px; }
+    .recording-player audio { width: 100%; height: 34px; }
+    .recording-delete { padding: 7px 9px; border: 1px solid #ead7db; border-radius: 9px; color: #a14c59; background: #fff; font-size: 9px; font-weight: 800; cursor: pointer; }
+    .recording-delete:hover { background: #fff1f3; }
+    .recording-badge { display: inline-flex; margin-left: 6px; padding: 2px 6px; border-radius: 999px; color: #5544c7; background: #eeebff; font-size: 7px; font-weight: 900; }
+    .answer-upgrade-card { margin: 0; border: 2px solid #8f7cf2; background: linear-gradient(145deg, #fff 0%, #f1edff 100%); box-shadow: 0 14px 34px rgba(83,64,190,.16); }
+    .answer-upgrade-card h3 { font-size: 14px; }
+    .answer-upgrade { padding: 15px 0; border-top: 1px solid #e8e3f7; }
+    .answer-upgrade:first-of-type { padding-top: 0; border-top: 0; }
+    .answer-question-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .answer-question { margin-bottom: 10px; color: #5141c1; font-size: 10px; font-weight: 900; }
+    .answer-question-row .answer-question { margin-bottom: 0; line-height: 1.55; }
+    .answer-retrain { flex: 0 0 auto; padding: 7px 10px; border: 1px solid #7663e8; border-radius: 9px; color: #fff; background: #6957e8; font-size: 8px; font-weight: 900; cursor: pointer; }
+    .answer-retrain:hover { background: #5644d3; }
+    .answer-block { margin-top: 9px; padding: 12px 14px; border-radius: 12px; background: #fff; }
+    .answer-block.original { background: #f2f0f7; }
+    .answer-block small { display: block; margin-bottom: 6px; color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .08em; }
+    .answer-block p { margin: 0; color: #383442; font-size: 10px; line-height: 1.75; white-space: pre-wrap; }
+    .answer-changes { margin: 9px 0 0; padding-left: 17px; color: #6c6677; font-size: 9px; line-height: 1.65; }
+    .report-card { margin-bottom: 14px; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+    .report-card h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 14px; font-size: 13px; }
+    .report-index { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: var(--purple); background: var(--purple-soft); font-size: 9px; }
+    .feedback-line { padding: 12px 0; border-top: 1px solid #efedf3; }
+    .feedback-line:first-of-type { border-top: 0; padding-top: 0; }
+    .quote { color: #5e596a; font-size: 10px; }
+    .correction { margin-top: 6px; color: #272334; font-size: 11px; font-weight: 800; }
+    .correction span { color: var(--green); }
+    .note { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.5; }
+    .focus-card {
+      position: sticky; top: 0;
+      padding: 24px;
+      border-radius: 20px;
+      color: #fff;
+      background: linear-gradient(145deg, #2f2754, #211b3e);
+    }
+    .focus-label { color: #a99cf0; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+    .focus-card h3 { margin: 14px 0 10px; font-size: 21px; line-height: 1.35; }
+    .focus-card p { margin: 0 0 18px; color: #cfc8e8; font-size: 10px; line-height: 1.65; }
+    .focus-criteria { margin: 0 0 20px; padding: 14px; border-radius: 13px; background: rgba(255,255,255,.07); }
+    .focus-criteria b { display: block; margin-bottom: 5px; font-size: 10px; }
+    .focus-criteria span { color: #cfc8e8; font-size: 9px; line-height: 1.5; }
+    .dark-button { width: 100%; padding: 12px; border: 0; border-radius: 11px; color: #3c2fab; background: #fff; font-size: 10px; font-weight: 900; cursor: pointer; }
+
+    .retrain-layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+    .target-hero { min-height: 760px; padding: 26px; border-radius: 22px; color: #fff; background: linear-gradient(160deg, #6d59ea, #4230b7); }
+    .target-hero .status-tag { display: inline-block; }
+    .target-hero h2 { margin: 18px 0 12px; font-size: 25px; line-height: 1.35; }
+    .target-hero p { color: #dfdbff; font-size: 11px; line-height: 1.7; }
+    .pattern-box { margin: 22px 0; padding: 16px; border: 1px solid rgba(255,255,255,.12); border-radius: 15px; background: rgba(255,255,255,.08); }
+    .pattern-box b { display: block; margin-bottom: 9px; font-size: 10px; }
+    .pattern-flow { color: #fff; font-size: 12px; font-weight: 900; line-height: 1.8; }
+    .step-list { display: grid; gap: 10px; }
+    .step {
+      display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .step:hover { border-color: #b9aff8; transform: translateY(-1px); }
+    .step:focus-visible { outline: 3px solid rgba(105,87,232,.24); outline-offset: 2px; }
+    .step.active { border-color: #9283f2; box-shadow: 0 8px 24px rgba(105,87,232,.10); }
+    .step-num { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 11px; color: var(--purple); background: var(--purple-soft); font-size: 10px; font-weight: 900; }
+    .step-copy b { display: block; font-size: 11px; }
+    .step-copy span { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
+    .step-state { color: var(--muted); font-size: 9px; font-weight: 800; }
+    .retrain-question { margin-top: 16px; padding: 23px; border-radius: 18px; background: #fff; border: 1px solid var(--line); }
+    .retrain-question small { color: var(--purple); font-size: 9px; font-weight: 900; letter-spacing: .1em; }
+    .retrain-question h3 { margin: 12px 0; font-size: 19px; line-height: 1.4; }
+    .answer-frame { padding: 14px; border-radius: 12px; color: #655f70; background: #f7f5fc; font-size: 10px; line-height: 1.75; }
+
+    .generic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .history-month { grid-column: 1 / -1; }
+    .history-month + .history-month { margin-top: 10px; }
+    .history-month-title { margin: 0 0 12px; font-size: 16px; }
+    .history-month-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .generic-card { padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+    .generic-card h3 { margin: 0 0 9px; font-size: 13px; }
+    .generic-card p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .bank-toolbar { display: grid; grid-template-columns: 160px 1fr auto; gap: 10px; margin-bottom: 16px; }
+    .bank-part-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .bank-part-stat { padding: 13px 15px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+    .bank-part-stat b { display: block; font-size: 12px; }
+    .bank-part-stat span { display: block; margin-top: 4px; color: var(--muted); font-size: 8px; line-height: 1.45; }
+    .bank-control {
+      width: 100%; padding: 12px 13px;
+      border: 1px solid var(--line); border-radius: 11px;
+      color: var(--ink); background: #fff; font: 700 10px/1.4 inherit; outline: none;
+    }
+    .bank-control:focus { border-color: #8d7cf0; box-shadow: 0 0 0 3px rgba(105,87,232,.10); }
+    .bank-list { display: grid; gap: 9px; max-height: 650px; overflow: auto; padding-right: 4px; }
+    .bank-item {
+      display: grid; grid-template-columns: 42px 1fr auto; gap: 13px; align-items: start;
+      padding: 15px; border: 1px solid var(--line); border-radius: 15px; background: #fff;
+    }
+    .bank-item h3 { margin: 0 0 5px; font-size: 11px; }
+    .bank-item p { margin: 0; color: var(--muted); font-size: 9px; }
+    .bank-item-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+    .bank-item-meta span { padding: 4px 7px; border-radius: 999px; color: #5b4bc4; background: #f0edff; font-size: 8px; font-weight: 900; }
+    .bank-question-list { grid-column: 2 / -1; margin: 0; padding: 12px 14px 12px 31px; border-radius: 11px; color: #3d3848; background: #f8f7fb; font-size: 9px; line-height: 1.65; }
+    .bank-question-list li + li { margin-top: 5px; }
+    .bank-question-missing { grid-column: 2 / -1; padding: 10px 12px; border: 1px dashed #d8d2e7; border-radius: 10px; color: #817b8e; background: #fbfafd; font-size: 8px; line-height: 1.55; }
+    .bank-use { border: 0; border-radius: 10px; padding: 10px 13px; color: #fff; background: var(--purple); font-size: 9px; font-weight: 900; cursor: pointer; }
+    .bank-summary { margin-bottom: 13px; color: var(--muted); font-size: 10px; }
+    .question-field { display: none; }
+    .question-field.visible { display: block; }
+    .plan-question-field { display: none; margin-bottom: 15px; }
+    .voice-modal-card.plan-mode .plan-question-field { display: block; }
+    .voice-modal-card.plan-mode .route-choices,
+    .voice-modal-card.plan-mode .part-row,
+    .voice-modal-card.plan-mode .standard-length-field,
+    .voice-modal-card.plan-mode .question-field { display: none; }
+    .voice-modal-card.report-question-mode .route-choices,
+    .voice-modal-card.report-question-mode .part-row,
+    .voice-modal-card.report-question-mode .question-field { display: none; }
+    .plan-question-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+    .plan-question-toolbar b { font-size: 10px; }
+    .plan-question-toolbar span { color: var(--muted); font-size: 8px; }
+    .plan-question-tools { display: flex; gap: 6px; }
+    .plan-question-tool { padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; color: #5848c2; background: #fff; font-size: 8px; font-weight: 900; cursor: pointer; }
+    .plan-question-list { display: grid; gap: 7px; max-height: 285px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+    .plan-question-option { display: grid; grid-template-columns: auto auto 1fr; gap: 9px; align-items: start; padding: 10px 11px; border: 1px solid var(--line); border-radius: 11px; background: #faf9fd; cursor: pointer; }
+    .plan-question-option:has(input:checked) { border-color: #8d7cf0; background: #f0edff; }
+    .plan-question-option input { margin-top: 2px; accent-color: var(--purple); }
+    .plan-question-number { display: grid; width: 21px; height: 21px; place-items: center; border-radius: 7px; color: #5d4bd0; background: #fff; font-size: 8px; font-weight: 900; }
+    .plan-question-text b { display: block; color: #3b3647; font-size: 9px; line-height: 1.45; }
+    .plan-question-text span { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; }
+
+    .plan-overview {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .plan-hero, .plan-progress-card { padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: #fff; }
+    .plan-hero { color: #fff; background: linear-gradient(135deg, #705cf0, #4f3bc8); box-shadow: 0 15px 34px rgba(83,64,200,.18); }
+    .plan-hero small { color: #d9d3ff; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+    .plan-hero h2 { margin: 12px 0 8px; font-size: 27px; }
+    .plan-hero p { margin: 0; color: #e7e3ff; font-size: 11px; line-height: 1.7; }
+    .plan-hero .primary-button { margin-top: 18px; }
+    .plan-progress-card { display: grid; align-content: center; }
+    .plan-progress-card strong { display: block; margin-bottom: 5px; font-size: 30px; }
+    .plan-progress-card span { color: var(--muted); font-size: 10px; }
+    .plan-progress-track { height: 9px; margin: 18px 0 10px; overflow: hidden; border-radius: 999px; background: #ece9f8; }
+    .plan-progress-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #806df2, #5b46d4); }
+    .plan-items { display: grid; gap: 10px; max-height: 650px; overflow: auto; padding-right: 4px; }
+    .plan-item { display: grid; grid-template-columns: 76px 1fr auto; gap: 14px; align-items: center; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+    .plan-item.today { border-color: #8d7cf0; box-shadow: 0 8px 24px rgba(105,87,232,.10); }
+    .plan-day { color: var(--purple); font-size: 11px; font-weight: 900; }
+    .plan-day span { display: block; margin-top: 4px; color: var(--muted); font-size: 8px; font-weight: 700; }
+    .plan-item-copy b { display: block; font-size: 11px; line-height: 1.45; }
+    .plan-item-copy span { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; }
+    .plan-question-preview { margin: 7px 0 0; color: #5f5a6c; font-size: 9px; line-height: 1.55; }
+    .plan-start { border: 0; border-radius: 10px; padding: 10px 12px; color: #fff; background: var(--purple); font-size: 9px; font-weight: 900; cursor: pointer; }
+    .plan-start:disabled { color: #288064; background: #e4f7ef; cursor: default; }
+    .empty-state { padding: 34px; border: 1px dashed #d8d3e7; border-radius: 18px; background: #fff; text-align: center; }
+    .empty-state h3 { margin: 0 0 8px; font-size: 16px; }
+    .empty-state p { margin: 0 0 18px; color: var(--muted); font-size: 10px; }
+
+    .modal {
+      position: absolute; inset: 0; z-index: 10;
+      display: none; place-items: center;
+      background: rgba(26,21,48,.60);
+      backdrop-filter: blur(7px);
+    }
+    .modal.open { display: grid; }
+    .modal-card { width: 530px; padding: 29px; border-radius: 24px; background: #fff; box-shadow: 0 30px 90px rgba(20,15,45,.32); }
+    .modal-top { display: flex; align-items: start; justify-content: space-between; }
+    .modal-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 15px; color: #fff; background: linear-gradient(140deg, #7d69f0, #5845d4); font-size: 20px; }
+    .close-button { border: 0; color: #8b8797; background: transparent; font-size: 20px; cursor: pointer; }
+    .modal-card h2 { margin: 18px 0 6px; font-size: 22px; }
+    .modal-card > p { margin: 0 0 19px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .choice-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 16px; }
+    .choice-row.route-choices { grid-template-columns: repeat(2, 1fr); }
+    .choice {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: #615d6c;
+      background: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .choice.selected { color: var(--purple); border-color: #8d7cf0; background: var(--purple-soft); }
+    .field-label { display: block; margin: 3px 0 7px; color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .08em; }
+    .goal-input {
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: #fff;
+      font: 600 10px/1.5 inherit;
+      outline: none;
+    }
+    .goal-input:focus { border-color: #8d7cf0; box-shadow: 0 0 0 3px rgba(105,87,232,.10); }
+    .prompt-box { padding: 15px; border-radius: 13px; background: #f6f4fb; }
+    .prompt-box small { display: block; margin-bottom: 6px; color: var(--muted); font-size: 8px; font-weight: 900; letter-spacing: .1em; }
+    .prompt-box b { font-size: 11px; line-height: 1.5; }
+    .modal-actions { display: flex; gap: 9px; margin-top: 18px; }
+    .modal-primary, .modal-secondary { flex: 1; padding: 12px; border-radius: 11px; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .modal-primary { border: 0; color: #fff; background: var(--purple); }
+    .modal-secondary { border: 1px solid var(--line); color: #625d70; background: #fff; }
+
+    .toast {
+      position: absolute; right: 34px; bottom: 28px; z-index: 20;
+      display: none;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: #fff; background: #252039;
+      font-size: 10px; font-weight: 800;
+      box-shadow: 0 15px 35px rgba(29,23,53,.24);
+    }
+    .toast.show { display: block; }
+
+    .desktop-console { display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center; margin: 0 0 18px; padding: 16px 20px; border: 1px solid #dcd7f5; border-radius: 18px; background: linear-gradient(135deg,#fff 0%,#f4f1ff 100%); box-shadow: 0 12px 28px rgba(73,58,166,.08); }
+    .desktop-console small { display: block; margin-bottom: 5px; color: #786fa0; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+    .desktop-console strong { display: block; font-size: 14px; }
+    .desktop-console p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .desktop-actions { display: flex; gap: 8px; }
+    .desktop-action { padding: 10px 14px; border: 1px solid #d6d0f0; border-radius: 10px; color: #4436ad; background: #fff; font-size: 10px; font-weight: 900; cursor: pointer; }
+    .desktop-action.primary { border-color: #5142c3; color: #fff; background: #5142c3; }
+    .desktop-action:disabled { cursor: not-allowed; opacity: .45; }
+    .recording-consent { display: inline-flex; align-items: center; gap: 9px; margin-top: 10px; cursor: pointer; user-select: none; }
+    .recording-consent input { position: absolute; opacity: 0; pointer-events: none; }
+    .recording-switch { position: relative; width: 32px; height: 18px; border-radius: 999px; background: #cbc6d9; transition: background .2s ease; }
+    .recording-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(31,25,57,.22); transition: transform .2s ease; }
+    .recording-consent input:checked + .recording-switch { background: var(--purple); }
+    .recording-consent input:checked + .recording-switch::after { transform: translateX(14px); }
+    .recording-consent-copy b { display: block; font-size: 10px; }
+    .recording-consent-copy span { display: block; margin-top: 2px; color: var(--muted); font-size: 8px; }
+  </style>
+</head>
+<body>
+  <main class="workspace">
+    <section id="artboard" class="artboard" aria-label="IELTS Speaking Coach 仪表盘">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">S+</div>
+          <div class="brand-copy"><strong>Speaking Coach</strong><span>IELTS voice practice</span></div>
+        </div>
+
+        <p class="nav-label">训练</p>
+        <nav class="nav">
+          <button class="nav-button active" data-view="home"><span class="nav-icon">⌂</span><span>今日训练</span></button>
+          <button class="nav-button" data-view="questions"><span class="nav-icon">☷</span><span>训练题库</span></button>
+          <button class="nav-button" data-view="plan"><span class="nav-icon">▦</span><span>学习计划</span></button>
+          <button class="nav-button" data-view="retrain"><span class="nav-icon">↻</span><span>复训中心</span></button>
+          <button class="nav-button" data-view="report"><span class="nav-icon">▤</span><span>复盘报告</span></button>
+          <button class="nav-button upgrade-entry" id="upgrade-entry" type="button"><span class="nav-icon">↑</span><span class="nav-button-copy"><span>功能升级</span><em>NEW</em></span></button>
+        </nav>
+
+        <p class="nav-label" style="margin-top:26px;">档案</p>
+        <nav class="nav">
+          <button class="nav-button" data-view="history"><span class="nav-icon">◷</span><span>训练记录</span></button>
+          <button class="nav-button" data-view="issues"><span class="nav-icon">◎</span><span>问题档案</span></button>
+          <button class="nav-button" data-view="vocab"><span class="nav-icon">Aa</span><span>我的词汇</span></button>
+        </nav>
+
+        <button class="sidebar-bottom" id="plan-entry" type="button">
+          <b id="plan-title">制定训练计划</b>
+          <p id="plan-summary">选择7天、14天或30天，生成题库练习安排。</p>
+          <div class="mini-progress"><span id="plan-progress"></span></div>
+        </button>
+      </aside>
+
+      <section class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="today-label">TODAY</p>
+            <h1 id="page-title">晚上好，同学</h1>
+          </div>
+          <div class="top-actions">
+            <div class="status-pill" id="connection-status"><span class="dot"></span>正在连接本地档案</div>
+            <div class="avatar">L</div>
+          </div>
+        </header>
+
+        <section class="view active" id="view-home">
+          <article class="desktop-console" id="desktop-console">
+            <div><small>DESKTOP VOICE BRIDGE</small><strong id="desktop-phase">浏览器预览模式</strong><p id="desktop-message">训练对话会实时保存到本地；结束后由你决定是否生成复盘。</p><label class="recording-consent"><input id="recording-enabled" type="checkbox"><span class="recording-switch" aria-hidden="true"></span><span class="recording-consent-copy"><b>保存我的回答录音</b><span>只录麦克风；仅保存在本机，可随时删除</span></span></label></div>
+            <div class="desktop-actions"><button class="desktop-action" id="open-chatgpt" disabled>打开ChatGPT</button><button class="desktop-action" id="recover-review" title="把 ChatGPT 已生成的报告保存到本地" disabled>同步复盘报告</button><button class="desktop-action primary" id="stop-training" title="只在自动生成没有触发时使用" disabled>补生成复盘报告</button></div>
+          </article>
+          <div class="home-grid">
+            <article class="practice-card">
+              <div class="practice-kicker">CHOOSE TODAY'S PRACTICE</div>
+              <h2>今天想怎么练？</h2>
+              <p>你决定今天的路线。历史报告会保留建议，但不会强制占用下一次训练。</p>
+              <button class="today-plan-route" id="today-plan-route" type="button"></button>
+              <div class="route-grid">
+                <button class="route-button" data-route="question"><span class="route-icon">☷</span><span class="route-copy"><b>从题库自由选题</b><span>先选 Part，再选具体题目</span></span></button>
+                <button class="route-button" data-route="continue"><span class="route-icon">↶</span><span class="route-copy"><b>继续上次那道题</b><span>重新回答或继续追问</span></span></button>
+                <button class="route-button" data-route="next"><span class="route-icon">→</span><span class="route-copy"><b>练题库下一道题</b><span>按计划继续向后练</span></span></button>
+                <button class="route-button recommended" data-route="review"><span class="route-icon">↻</span><span class="route-copy"><b>复训上一节课</b><span>可选：上次的重点内容</span></span></button>
+              </div>
+            </article>
+
+            <article class="week-card">
+              <div class="panel-head"><h3>本周训练</h3><button class="link-button" data-view-link="history">查看记录</button></div>
+              <div class="week-score"><strong id="week-session-count">0</strong><span id="week-session-goal">/ 5 次目标</span></div>
+              <div class="week-bars" id="week-bars"></div>
+            </article>
+          </div>
+
+          <div class="stat-row">
+            <article class="stat-card"><span class="stat-icon">◉</span><div><span class="stat-value" id="total-sessions">0</span><span class="stat-label">累计训练</span></div></article>
+            <article class="stat-card"><span class="stat-icon">◷</span><div><span class="stat-value" id="week-speaking-time">0m</span><span class="stat-label">本周开口</span></div></article>
+            <article class="stat-card"><span class="stat-icon">↗</span><div><span class="stat-value" id="improved-count">0</span><span class="stat-label">初步改善</span></div></article>
+          </div>
+
+          <div class="lower-grid">
+            <article class="panel">
+              <div class="panel-head"><h3>你的问题正在怎样变化</h3><button class="link-button" data-view-link="issues">全部问题</button></div>
+              <div id="home-issues"></div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-head"><h3>最近练习</h3><button class="link-button" data-view-link="report">查看复盘</button></div>
+              <div class="session-list" id="home-recent-sessions"></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-plan">
+          <div class="panel-head"><p class="section-subtitle" style="margin-bottom:0">按计划查看每天题目，也可以随时自由选题或复训。</p><button class="primary-button" id="edit-plan">调整计划</button></div>
+          <div id="plan-view-content"></div>
+        </section>
+
+        <section class="view" id="view-questions">
+          <p class="section-subtitle" id="bank-source">正在读取已导入题库…</p>
+          <div class="bank-part-stats" id="bank-part-stats"></div>
+          <div class="bank-toolbar">
+            <select id="bank-part" class="bank-control">
+              <option value="">全部 Part</option>
+              <option value="Part 1">Part 1</option>
+              <option value="Part 2">Part 2</option>
+              <option value="Part 3">Part 3</option>
+            </select>
+            <input id="bank-search" class="bank-control" placeholder="搜索英文或中文主题" />
+            <button class="primary-button" id="bank-start">从题库选题</button>
+          </div>
+          <div class="bank-summary" id="bank-summary">0 道题</div>
+          <div class="bank-list" id="bank-list"></div>
+        </section>
+
+        <section class="view" id="view-report">
+          <p class="section-subtitle" id="report-subtitle">训练完成后，标准化报告会自动显示在这里。</p>
+          <div class="report-date-list" id="report-date-list"></div>
+          <div class="report-grid" id="report-grid">
+            <div class="report-scroll">
+              <article class="report-card">
+                <h3><span class="report-index">01</span>必须纠正的表达</h3>
+                <div class="feedback-line">
+                  <div class="quote">你说： “Many people is difficult to find a job.”</div>
+                  <div class="correction"><span>改为：</span> “Many people find it difficult to get a job.”</div>
+                  <div class="note">这是固定结构问题：find it + adjective + to do something。</div>
+                </div>
+                <div class="feedback-line">
+                  <div class="quote">你说： “It can let students to learn...”</div>
+                  <div class="correction"><span>改为：</span> “It allows students to learn...”</div>
+                  <div class="note">let后面不加to；这里用allow更加自然。</div>
+                </div>
+              </article>
+
+              <article class="report-card">
+                <h3><span class="report-index">02</span>更自然的表达</h3>
+                <div class="feedback-line">
+                  <div class="quote">你说： “The knowledge in books is not enough.”</div>
+                  <div class="correction"><span>更自然：</span> “Textbook knowledge alone may not prepare students for real life.”</div>
+                </div>
+                <div class="feedback-line">
+                  <div class="quote">你说： “It is good for their future.”</div>
+                  <div class="correction"><span>更具体：</span> “It can make them more employable after graduation.”</div>
+                </div>
+              </article>
+
+              <article class="report-card">
+                <h3><span class="report-index">03</span>重复词和口头习惯</h3>
+                <div class="feedback-line">
+                  <div class="quote">“I think” 在3个回答中都作为第一句话出现。</div>
+                  <div class="correction"><span>可替换：</span> “From my perspective...” / 直接陈述观点</div>
+                  <div class="note">这不是必须纠错，但会让回答开头显得机械。</div>
+                </div>
+              </article>
+
+              <article class="report-card">
+                <h3><span class="report-index">04</span>逻辑与展开</h3>
+                <div class="feedback-line">
+                  <div class="quote">原回答结构：观点 → 第二个观点 → 停止</div>
+                  <div class="correction"><span>缺失：</span> 原因和具体例子</div>
+                  <div class="note">建议结构：观点 → because说明机制 → 一个学校或学生的例子 → 回到问题。</div>
+                </div>
+              </article>
+            </div>
+
+            <aside>
+              <div class="focus-card">
+                <div class="focus-label">NEXT SINGLE TARGET</div>
+                <h3>观点后补充一个原因和具体例子</h3>
+                <p>这是本次最影响Part 3回答完整度的问题，并且连续3次训练出现。</p>
+                <div class="focus-criteria">
+                  <b>通过标准</b>
+                  <span>在两个不同话题中，不看提示完成“观点—原因—例子”。</span>
+                </div>
+                <button class="dark-button" data-view-link="retrain">进入8分钟复训 →</button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-retrain">
+          <p class="section-subtitle">一次只改一个问题。通过迁移测试后，才进入下一个目标。</p>
+          <div class="retrain-layout">
+            <aside class="target-hero">
+              <span class="status-tag training" id="retrain-status">待复训 · 来自最近复盘</span>
+              <h2 id="retrain-title">完成一次复盘后，这里会生成具体复训目标</h2>
+              <p id="retrain-reason">系统会从你真实回答中的逻辑、重复习惯和表达问题里，只选择一个目标。</p>
+              <div class="pattern-box">
+                <b>本次只完成这三个动作</b>
+                <div class="pattern-flow" id="retrain-flow">看懂修改点<br>↓<br>重答原题<br>↓<br>不看提示再答一次</div>
+              </div>
+              <button class="primary-button" id="start-retrain">● 开始8分钟复训</button>
+            </aside>
+
+            <div>
+              <div class="step-list">
+                <div class="step active" data-retrain-step="1" role="button" tabindex="0">
+                  <span class="step-num">01</span><div class="step-copy"><b>回看证据</b><span>对照原回答、高分建议答案和本次单一目标</span></div><span class="step-state">先看这里</span>
+                </div>
+                <div class="step" data-retrain-step="2" role="button" tabindex="0">
+                  <span class="step-num">02</span><div class="step-copy"><b>重答原题</b><span>保留自己的事实和观点，把目标真正用进回答</span></div><span class="step-state">现在练</span>
+                </div>
+                <div class="step" data-retrain-step="3" role="button" tabindex="0">
+                  <span class="step-num">03</span><div class="step-copy"><b>撤掉提示</b><span>不看建议答案，再自然回答同一道题</span></div><span class="step-state">下一步</span>
+                </div>
+                <div class="step" data-retrain-step="4" role="button" tabindex="0">
+                  <span class="step-num">04</span><div class="step-copy"><b>换题验证</b><span>在相关新题中再次使用同一个改进点</span></div><span class="step-state">完成原题后</span>
+                </div>
+              </div>
+              <article class="retrain-question">
+                <small>CURRENT PRACTICE QUESTION</small>
+                <h3 id="retrain-question">等待最近一份复盘中的真实问题</h3>
+                <div class="answer-frame" id="retrain-answer-frame"><b>回答提示：</b><br>先看复盘中的高分建议答案，再用自己的语言重新回答，不要求逐字背诵。</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-history">
+          <p class="section-subtitle">回看每一次练习、复盘报告和当时生成的下次目标。</p>
+           <div class="generic-grid" id="history-grid">
+            <article class="generic-card"><h3>7月30日 · Part 3</h3><p>Education｜11分钟｜目标：展开原因和例子｜生成4类反馈</p></article>
+            <article class="generic-card"><h3>7月29日 · Part 2</h3><p>A useful skill｜8分钟｜目标：故事时间线｜生成3类反馈</p></article>
+            <article class="generic-card"><h3>7月28日 · 复训</h3><p>I think替换｜6分钟｜跨话题迁移通过1次</p></article>
+            <article class="generic-card"><h3>7月26日 · Part 1</h3><p>Home & Study｜9分钟｜目标：减少单句回答</p></article>
+          </div>
+        </section>
+
+        <section class="view" id="view-issues">
+          <p class="section-subtitle">这里记录问题是否真的减少，而不是只显示一次性的AI建议。</p>
+           <div class="generic-grid" id="issues-grid">
+            <article class="generic-card"><span class="status-tag training">训练中</span><h3 style="margin-top:14px;">观点缺少原因和例子</h3><p>出现3次｜完成单点拆解｜等待同类题迁移。</p></article>
+            <article class="generic-card"><span class="status-tag improved">初步改善</span><h3 style="margin-top:14px;">反复使用“I think”</h3><p>出现4次｜跨话题通过1次｜两天后复测。</p></article>
+            <article class="generic-card"><span class="status-tag new">新问题</span><h3 style="margin-top:14px;">people is</h3><p>出现1次｜需要在下一次语法微练习中验证。</p></article>
+          </div>
+        </section>
+
+        <section class="view" id="view-vocab">
+          <p class="section-subtitle">只保存与你说过的话有关、并且需要在下次真正使用的表达。</p>
+           <div class="generic-grid" id="vocab-grid">
+            <article class="generic-card"><h3>good for their future</h3><p><b>升级：</b>make them more employable<br><b>状态：</b>尚未在新答案中使用</p></article>
+            <article class="generic-card"><h3>knowledge in books</h3><p><b>升级：</b>textbook knowledge<br><b>搭配：</b>rely solely on textbook knowledge</p></article>
+            <article class="generic-card"><h3>let students to learn</h3><p><b>纠正：</b>allow students to learn<br><b>状态：</b>必须纠错</p></article>
+          </div>
+        </section>
+
+        <div class="modal" id="voice-modal">
+          <div class="modal-card voice-modal-card" id="voice-modal-card">
+            <div class="modal-top"><div class="modal-icon">●</div><button class="close-button" id="close-modal">×</button></div>
+            <h2>选择今天怎么练</h2>
+            <p id="voice-modal-description">自由训练可以单独选题；从学习计划进入时，可以选择这一次要完成的题目。</p>
+            <div class="choice-row route-choices">
+              <button class="choice selected" data-route-choice="continue">继续上次那道题</button>
+              <button class="choice" data-route-choice="next">题库下一道题</button>
+              <button class="choice" data-route-choice="review">复训上一节课</button>
+              <button class="choice" data-route-choice="question">从题库自由选题</button>
+            </div>
+            <div class="choice-row part-row">
+              <button class="choice part-choice" data-part="Part 1">Part 1</button>
+              <button class="choice part-choice" data-part="Part 2">Part 2</button>
+              <button class="choice part-choice selected" data-part="Part 3">Part 3</button>
+            </div>
+            <div class="question-field" id="question-field">
+              <label class="field-label" for="question-select">选择具体题目</label>
+              <select class="goal-input" id="question-select"></select>
+            </div>
+            <div class="plan-question-field" id="plan-question-field">
+              <div class="plan-question-toolbar"><div><b id="plan-question-title">选择本次训练题目</b><span id="plan-question-progress"></span></div><div class="plan-question-tools"><button class="plan-question-tool" id="plan-select-all" type="button">全选剩余</button><button class="plan-question-tool" id="plan-clear-all" type="button">清空</button></div></div>
+              <div class="plan-question-list" id="plan-question-list"></div>
+            </div>
+            <div class="standard-length-field">
+              <span class="field-label">训练时长</span>
+              <div class="choice-row">
+                <button class="choice length-choice" data-length="quick">快速</button>
+                <button class="choice length-choice selected" data-length="standard">标准</button>
+                <button class="choice length-choice" data-length="full">完整</button>
+              </div>
+            </div>
+            <label class="field-label" for="single-goal">今天只练一个目标（可选）</label>
+            <input class="goal-input" id="single-goal" maxlength="300" placeholder="例如：回答后补充一个具体原因" />
+            <div class="prompt-box">
+              <small id="selection-summary">继续上次那道题 · Part 3 · 标准</small>
+              <b id="voice-prompt">保存后即可按这道题进入训练</b>
+            </div>
+            <div class="modal-actions">
+              <button class="modal-secondary" id="cancel-selection">取消</button>
+              <button class="modal-primary" id="save-selection">保存并一键启动Voice</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal" id="plan-modal">
+          <div class="modal-card">
+            <div class="modal-top"><div class="modal-icon">▦</div><button class="close-button" id="close-plan-modal">×</button></div>
+            <h2>制定训练计划</h2>
+            <p>计划会覆盖所选范围内的全部题目，并平均分配到训练日；周期越短，每天题量越大。</p>
+            <span class="field-label">计划周期</span>
+            <div class="choice-row">
+              <button class="choice plan-length-choice" data-plan-length="7">7天</button>
+              <button class="choice plan-length-choice selected" data-plan-length="14">14天</button>
+              <button class="choice plan-length-choice" data-plan-length="30">30天</button>
+            </div>
+            <label class="field-label" for="plan-weekly-target">每周训练次数</label>
+            <select class="goal-input" id="plan-weekly-target">
+              <option value="3">每周3次</option>
+              <option value="5" selected>每周5次</option>
+              <option value="7">每天训练</option>
+            </select>
+            <label class="field-label" for="plan-focus">训练重点</label>
+            <select class="goal-input" id="plan-focus">
+              <option value="balanced">Part 1、2、3均衡</option>
+              <option value="Part 1">重点练 Part 1</option>
+              <option value="Part 2">重点练 Part 2</option>
+              <option value="Part 3">重点练 Part 3</option>
+            </select>
+            <div class="modal-actions">
+              <button class="modal-secondary" id="cancel-plan">取消</button>
+              <button class="modal-primary" id="save-plan">生成计划</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="toast" id="toast">训练选择已保存</div>
+      </section>
+    </section>
+
+  </main>
+
+  <script>
+    const viewNames = {
+      home: "晚上好，同学",
+      questions: "训练题库",
+      plan: "学习计划",
+      report: "复盘报告",
+      retrain: "单目标复训",
+      history: "训练记录",
+      issues: "个人问题档案",
+      vocab: "我的可用词汇"
+    };
+
+    function showView(name) {
+      document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
+      document.querySelectorAll(".nav-button").forEach((button) => button.classList.remove("active"));
+      document.getElementById(`view-${name}`).classList.add("active");
+      const matchingNav = document.querySelector(`.nav-button[data-view="${name}"]`);
+      if (matchingNav) matchingNav.classList.add("active");
+      document.getElementById("page-title").textContent = viewNames[name] || "Speaking Coach";
+    }
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.view));
+    });
+    document.querySelectorAll("[data-view-link]").forEach((button) => {
+      button.addEventListener("click", () => showView(button.dataset.viewLink));
+    });
+
+    document.getElementById("upgrade-entry").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/api/upgrade-config");
+        const config = await response.json();
+        if (!response.ok) throw new Error(config.error || "升级页面暂时不可用");
+        if (!config.websiteUrl) throw new Error("升级页面即将上线，敬请期待");
+        window.open(config.websiteUrl, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        showToast(error.message || "升级页面暂时不可用", 4200);
+      }
+    });
+
+    const modal = document.getElementById("voice-modal");
+    const voiceModalCard = document.getElementById("voice-modal-card");
+    const voiceModalDescription = document.getElementById("voice-modal-description");
+    const planModal = document.getElementById("plan-modal");
+    const toast = document.getElementById("toast");
+    const desktopApi = window.ieltsDesktop;
+    const desktopPhase = document.getElementById("desktop-phase");
+    const desktopMessage = document.getElementById("desktop-message");
+    const openChatGPTButton = document.getElementById("open-chatgpt");
+    const recoverReviewButton = document.getElementById("recover-review");
+    const stopTrainingButton = document.getElementById("stop-training");
+    const recordingEnabledInput = document.getElementById("recording-enabled");
+    function applyDesktopStatus(status = {}) {
+      const labels = {
+        idle: "桌面训练助手已就绪", opening: "正在打开ChatGPT", "login-required": "需要登录ChatGPT",
+        prompting: "正在发送雅思训练设置", "starting-voice": "正在启动Voice", training: "Voice训练进行中",
+        "voice-manual": "请手动点击Voice", "voice-ended": "已识别到语音结束", "review-ready": "复盘已生成，等待同步", "ending-voice": "正在整理对话", reviewing: "正在生成复盘", "repairing-review": "正在重新生成回答建议",
+        saving: "正在保存学习档案", complete: "本次训练已完成", interrupted: "训练被中断", "capture-warning": "实时保存需要检查",
+        "checking-session": "正在确认训练记录", "reading-current": "正在读取当前ChatGPT对话",
+        "reading-clipboard": "正在检查剪贴板", "reading-pending": "正在恢复本地待同步复盘",
+        "recovery-needed": "没有读到可同步的复盘", "sync-error": "同步失败，可以重试"
+      };
+      desktopPhase.textContent = labels[status.phase] || status.phase || "桌面训练助手";
+      desktopMessage.textContent = `${status.message || "已连接桌面训练助手"}${status.transcriptCount ? `｜已捕获 ${status.transcriptCount} 条对话` : ""}${status.recordingActive ? "｜● 正在录制你的回答" : ""}`;
+      const syncing = ["checking-session", "reading-current", "reading-clipboard", "reading-pending", "waiting-end", "reviewing", "review-retrying", "repairing-review", "saving"].includes(status.phase);
+      stopTrainingButton.disabled = syncing || status.phase === "review-ready";
+      stopTrainingButton.textContent = "补生成复盘报告";
+      recoverReviewButton.disabled = syncing;
+      recoverReviewButton.textContent = "同步复盘报告";
+    }
+    if (desktopApi) {
+      openChatGPTButton.disabled = false;
+      recoverReviewButton.disabled = false;
+      openChatGPTButton.addEventListener("click", () => desktopApi.openChatGPT());
+      recoverReviewButton.addEventListener("click", async () => {
+        recoverReviewButton.disabled = true;
+        desktopPhase.textContent = "正在读取当前对话";
+        desktopMessage.textContent = "正在直接检查当前ChatGPT对话；必要时再读取剪贴板。";
+        try {
+          const result = await (desktopApi.syncGeneratedReview?.() || desktopApi.recoverReview());
+          showToast(result.ok ? "复盘报告已同步到本地" : "尚未生成复盘", 5000);
+          await loadDashboardData();
+          if (result.ok) showView("report");
+        } catch (error) {
+          desktopPhase.textContent = "没有读到可同步的复盘";
+          desktopMessage.textContent = error.message || "如果尚未生成报告，请点击“补生成复盘报告”。";
+          showToast(`同步失败：${error.message}`, 6000);
+        } finally {
+          recoverReviewButton.disabled = false;
+        }
+      });
+      stopTrainingButton.addEventListener("click", async () => {
+        stopTrainingButton.disabled = true;
+        try {
+          const result = await (desktopApi.generateMissingReview?.() || desktopApi.stopTraining());
+          showToast(result.ok ? "复盘已补生成，请再点击“同步复盘报告”" : "复盘尚未生成", 6000);
+        } catch (error) {
+          showToast(`补生成失败：${error.message}`, 6000);
+        }
+      });
+      desktopApi.getStatus().then(applyDesktopStatus);
+      desktopApi.onStatus(applyDesktopStatus);
+      desktopApi.onDataUpdated?.(async (payload) => {
+        await loadDashboardData();
+        if (payload?.kind !== "transcript-checkpoint") showToast("复盘、训练记录、问题档案和词汇已同步", 5000);
+      });
+    }
+    const selectionSummary = document.getElementById("selection-summary");
+    function openVoiceModal() {
+      const planMode = Boolean(selectedPlanItemId);
+      const reportQuestionMode = selectedRoute === "report-question" && Boolean(selectedReportQuestion);
+      voiceModalCard.classList.toggle("plan-mode", planMode);
+      voiceModalCard.classList.toggle("report-question-mode", reportQuestionMode);
+      voiceModalDescription.textContent = reportQuestionMode
+        ? "这次只重新练复盘中的这一道实际题目；原回答和修改版仍保留在复盘报告中。"
+        : planMode
+        ? "勾选这一次想完成的题目。未勾选的题目会继续保留在今日计划中。"
+        : "自由训练可以单独选题；从学习计划进入时，可以选择这一次要完成的题目。";
+      modal.classList.add("open");
+    }
+    function closeVoiceModal() { modal.classList.remove("open"); }
+    const routeLabels = {
+      continue: "继续上次那道题",
+      next: "题库下一道题",
+      review: "复训上一节课",
+      question: "从题库自由选题",
+      "report-question": "重新练复盘中的这道题"
+    };
+    const routeValues = {
+      continue: "continue_last_question",
+      next: "next_question",
+      review: "retrain_previous_session",
+      question: "choose_question",
+      "report-question": "repeat_report_question"
+    };
+    const lengthLabels = { quick: "快速", standard: "标准", full: "完整" };
+    let selectedRoute = "continue";
+    let selectedPart = "Part 3";
+    let selectedLength = "standard";
+    let questions = [];
+    let selectedQuestionId = "";
+    let selectedReportQuestion = "";
+    let selectedPlanItemId = "";
+    let selectedPlanQuestionIds = [];
+    let currentPlan = null;
+    let retrainTargets = new Map();
+    let activeRetrainTarget = null;
+    let activeRetrainStep = 1;
+    let selectedPlanLength = 14;
+    const questionField = document.getElementById("question-field");
+    const questionSelect = document.getElementById("question-select");
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      })[character]);
+    }
+    function reportItems(title, index, items) {
+      const rows = Array.isArray(items) ? items : [];
+      return `<article class="report-card"><h3><span class="report-index">${String(index).padStart(2, "0")}</span>${title}</h3>${rows.length ? rows.map((item) => `
+        <div class="feedback-line">
+          <div class="quote">${escapeHtml(item.original || item.issue || item)}</div>
+          ${item.improved ? `<div class="correction"><span>建议：</span>${escapeHtml(item.improved)}</div>` : ""}
+          ${item.reason ? `<div class="note">${escapeHtml(item.reason)}</div>` : ""}
+        </div>`).join("") : '<div class="note">本次没有足够证据记录这一类问题。</div>'}</article>`;
+    }
+    function sessionTime(item) {
+      const value = new Date(item.completedAt || item.startedAt || 0).getTime();
+      return Number.isFinite(value) ? value : 0;
+    }
+    function sessionMinutes(item) {
+      const start = new Date(item.startedAt || 0).getTime();
+      const end = new Date(item.completedAt || item.startedAt || 0).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+      return Math.max(1, Math.round((end - start) / 60000));
+    }
+    function startOfWeek(value = new Date()) {
+      const date = new Date(value);
+      date.setHours(0, 0, 0, 0);
+      const day = date.getDay() || 7;
+      date.setDate(date.getDate() - day + 1);
+      return date;
+    }
+    function sameLocalDay(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+    function relativeSessionDate(item) {
+      const date = new Date(item.completedAt || item.startedAt);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      if (sameLocalDay(date, today)) return "今天";
+      if (sameLocalDay(date, yesterday)) return "昨天";
+      return date.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" });
+    }
+    function formatFullDate(item) {
+      return new Date(item.completedAt || item.startedAt).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+    }
+    function answerUpgradeHtml(session, report) {
+      const upgrades = Array.isArray(report.answer_upgrades) ? report.answer_upgrades : [];
+      if (!upgrades.length) {
+        return `<article class="report-card answer-upgrade-card"><h3><span class="report-index">06</span>回答建议</h3><div class="note">本次复盘的回答建议生成不完整。你的原回答仍保存在本机，可以直接重新生成，无需重练。</div><button class="answer-retrain" type="button" data-regenerate-answer-upgrades="${escapeHtml(session.id)}">重新生成回答建议</button></article>`;
+      }
+      const reportPart = ["Part 1", "Part 2", "Part 3"].includes(session?.part) ? session.part : (["Part 1", "Part 2", "Part 3"].includes(report.focus_part) ? report.focus_part : "Part 3");
+      return `<article class="report-card answer-upgrade-card"><h3><span class="report-index">06</span>回答建议 · 逐题高分版</h3>${upgrades.map((item, index) => `<div class="answer-upgrade"><div class="answer-question-row"><div class="answer-question">问题 ${index + 1}${item.question ? `｜${escapeHtml(item.question)}` : ""}</div>${item.question ? `<button class="answer-retrain" type="button" data-retrain-question="${escapeHtml(item.question)}" data-retrain-part="${escapeHtml(reportPart)}">重新练该题</button>` : ""}</div><div class="answer-block original"><small>我的原回答</small><p>${escapeHtml(item.original_answer || "未记录")}</p></div><div class="answer-block"><small>高分建议答案</small><p>${escapeHtml(item.revised_answer || "未生成")}</p></div>${Array.isArray(item.changes) && item.changes.length ? `<ul class="answer-changes">${item.changes.map((change) => `<li>${escapeHtml(change)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</article>`;
+    }
+    function retrainTargetForSession(session) {
+      const report = session?.report || {};
+      const target = report.priority_target || session?.priorityTarget || {};
+      const candidate = report.logic_feedback?.[0] || report.repeated_habits?.[0] || report.natural_upgrades?.[0] || report.must_correct?.[0] || {};
+      const answer = Array.isArray(report.answer_upgrades) ? report.answer_upgrades.find((item) => item?.question && item?.revised_answer) : null;
+      const description = target.description || target.label || report.next_target || candidate.improved || candidate.reason || "";
+      if (!description) return null;
+      return {
+        id: target.id || `session-${session.id}`,
+        description,
+        reason: target.reason || candidate.reason || report.summary || "这个目标来自本次真实回答中最值得优先改进的一点。",
+        question: answer?.question || "",
+        originalAnswer: answer?.original_answer || "",
+        revisedAnswer: answer?.revised_answer || "",
+        part: session.part || report.focus_part || "Part 3",
+        sourceSessionId: session.id
+      };
+    }
+    function reportSessionContent(session) {
+      const report = session?.report;
+      if (!report) return "";
+      const retrainTarget = retrainTargetForSession(session);
+      return `<div class="report-grid"><div class="report-scroll">
+        ${reportItems("必须纠正的表达", 1, report.must_correct)}
+        ${reportItems("更自然的表达", 2, report.natural_upgrades)}
+        ${reportItems("重复词和口头习惯", 3, report.repeated_habits)}
+        ${reportItems("逻辑与展开", 4, report.logic_feedback)}
+        ${reportItems("可升级词汇", 5, report.vocabulary_upgrades)}
+      </div><aside class="report-side"><div class="focus-card"><div class="focus-label">NEXT SINGLE TARGET</div><h3>${escapeHtml(retrainTarget?.description || "本次没有足够证据安排复训")}</h3><p>${escapeHtml(retrainTarget?.reason || "完成更多回答后，系统会选择一个具体目标。")}</p>${retrainTarget ? `<button class="dark-button" data-view-link="retrain" data-retrain-session-id="${escapeHtml(session.id)}">带着本题进入复训 →</button>` : ""}</div>${answerUpgradeHtml(session, report)}</aside></div>`;
+    }
+    function renderPlan(plan) {
+      const title = document.getElementById("plan-title");
+      const summary = document.getElementById("plan-summary");
+      const progress = document.getElementById("plan-progress");
+      if (!plan) {
+        title.textContent = "制定训练计划";
+        summary.textContent = "选择7天、14天或30天，生成题库练习安排。";
+        progress.style.width = "0%";
+        return;
+      }
+      const elapsed = Math.max(0, Math.floor((Date.now() - new Date(plan.startDate).getTime()) / 86400000));
+      const day = Math.min(plan.lengthDays, elapsed + 1);
+      const completedItems = (plan.items || []).filter((item) => item.status === "completed").length;
+      const completedQuestions = (plan.items || []).reduce((sum, item) => sum + planItemCompletedCount(item), 0);
+      const totalQuestions = Number(plan.questionCount) || (plan.items || []).reduce((sum, item) => sum + Number(item.questionCount || item.questions?.length || 1), 0);
+      const focus = plan.focus === "balanced" ? "三部分均衡" : `重点${plan.focus}`;
+      selectedPlanLength = Number(plan.lengthDays);
+      document.querySelectorAll(".plan-length-choice").forEach((item) => item.classList.toggle("selected", Number(item.dataset.planLength) === selectedPlanLength));
+      document.getElementById("plan-weekly-target").value = String(plan.weeklyTarget);
+      document.getElementById("plan-focus").value = plan.focus;
+      title.textContent = `${plan.lengthDays}天计划 · Day ${day}`;
+      summary.textContent = `${focus} · ${completedQuestions}/${totalQuestions}题 · ${completedItems}/${(plan.items || []).length}个训练日`;
+      progress.style.width = `${totalQuestions ? Math.round((completedQuestions / totalQuestions) * 100) : 0}%`;
+    }
+    function renderPlanView(plan) {
+      currentPlan = plan;
+      const container = document.getElementById("plan-view-content");
+      if (!plan) {
+        container.innerHTML = '<div class="empty-state"><h3>还没有学习计划</h3><p>选择7天、14天或30天，系统会从本地题库排出每天的练习。</p><button class="primary-button" id="create-first-plan">制定计划</button></div>';
+        container.querySelector("#create-first-plan").addEventListener("click", () => planModal.classList.add("open"));
+        return;
+      }
+      const items = plan.items || [];
+      const completedDays = items.filter((item) => item.status === "completed").length;
+      const totalQuestions = Number(plan.questionCount) || items.reduce((sum, item) => sum + Number(item.questionCount || item.questions?.length || 1), 0);
+      const completedQuestions = items.reduce((sum, item) => sum + planItemCompletedCount(item), 0);
+      const elapsed = Math.max(0, Math.floor((Date.now() - new Date(plan.startDate).getTime()) / 86400000));
+      const day = Math.min(plan.lengthDays, elapsed + 1);
+      const focus = plan.focus === "balanced" ? "Part 1、2、3 均衡" : `重点 ${plan.focus}`;
+      const progress = totalQuestions ? Math.round((completedQuestions / totalQuestions) * 100) : 0;
+      container.innerHTML = `<div class="plan-overview">
+        <article class="plan-hero"><small>FULL-COVERAGE STUDY PLAN</small><h2>${plan.lengthDays}天计划 · Day ${day}</h2><p>${escapeHtml(focus)} · 共${totalQuestions}题<br>分配到${items.length}个训练日；每天的题目可以拆成多次完成。</p></article>
+        <article class="plan-progress-card"><strong>${completedQuestions} / ${totalQuestions} 题</strong><span>已完成 ${completedDays}/${items.length} 个训练日</span><div class="plan-progress-track"><i style="width:${progress}%"></i></div><span>${progress}% 完成</span></article>
+      </div><div class="plan-items">${items.map((item) => {
+        const date = new Date(`${item.date}T00:00:00`);
+        const isToday = sameLocalDay(date, new Date());
+        const plannedQuestions = Array.isArray(item.questions) ? item.questions : [];
+        const completedCount = planItemCompletedCount(item);
+        const totalCount = Number(item.questionCount || item.questionIds?.length || plannedQuestions.length || 1);
+        const remainingCount = Math.max(0, totalCount - completedCount);
+        const done = remainingCount === 0 || item.status === "completed";
+        const completedIds = new Set(item.completedQuestionIds || []);
+        const remainingQuestions = plannedQuestions.filter((question) => !completedIds.has(question.id));
+        const preview = remainingQuestions.slice(0, 3).map((question) => question.selectedReference).join(" · ");
+        const extra = Math.max(0, remainingQuestions.length - 3);
+        const partLabel = item.part === "Full mock" ? "Part 1、2、3" : item.part;
+        return `<article class="plan-item${isToday ? " today" : ""}"><div class="plan-day">Day ${item.day}<span>${escapeHtml(date.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric", weekday: "short" }))}</span></div><div class="plan-item-copy"><b>${completedCount}/${totalCount}题已完成 · ${escapeHtml(partLabel)}</b><span>${isToday ? "今天 · " : ""}${done ? "当天题目已全部完成" : `还剩${remainingCount}题，可以分多次训练`}</span><p class="plan-question-preview">${escapeHtml(preview || item.selectedReference || "题库练习")}${extra ? ` · 另${extra}题` : ""}</p></div><button class="plan-start" data-plan-item="${escapeHtml(item.id)}" ${done ? "disabled" : ""}>${done ? "已完成 ✓" : "选择本次题目"}</button></article>`;
+      }).join("")}</div>`;
+      container.querySelectorAll("[data-plan-item]:not(:disabled)").forEach((button) => button.addEventListener("click", () => {
+        const planItem = items.find((item) => item.id === button.dataset.planItem);
+        if (planItem) startPlanItem(planItem);
+      }));
+    }
+    function planItemCompletedCount(item) {
+      const total = Number(item?.questionCount || item?.questionIds?.length || item?.questions?.length || 0);
+      if (item?.status === "completed") return total;
+      return Math.min(total, new Set(item?.completedQuestionIds || []).size);
+    }
+    function incompletePlanQuestions(planItem) {
+      const completedIds = new Set(planItem?.completedQuestionIds || []);
+      return (planItem?.questions || []).filter((question) => !completedIds.has(question.id));
+    }
+    function updateSelectedPlanPart(planItem) {
+      const selectedQuestions = (planItem?.questions || []).filter((question) => selectedPlanQuestionIds.includes(question.id));
+      const parts = [...new Set(selectedQuestions.map((question) => question.part))];
+      selectedPart = parts.length === 1 ? parts[0] : "Full mock";
+      selectedQuestionId = selectedPlanQuestionIds[0] || "";
+      updateSelectionSummary();
+    }
+    function renderPlanQuestionChoices(planItem) {
+      const remaining = incompletePlanQuestions(planItem);
+      const completedCount = planItemCompletedCount(planItem);
+      const totalCount = Number(planItem.questionCount || planItem.questionIds?.length || remaining.length);
+      document.getElementById("plan-question-title").textContent = `Day ${planItem.day} · 选择本次训练题目`;
+      document.getElementById("plan-question-progress").textContent = ` 已完成 ${completedCount}/${totalCount}，还剩 ${remaining.length} 道`;
+      const list = document.getElementById("plan-question-list");
+      list.innerHTML = remaining.map((question, index) => `<label class="plan-question-option"><input type="checkbox" data-plan-question-id="${escapeHtml(question.id)}" ${selectedPlanQuestionIds.includes(question.id) ? "checked" : ""}><span class="plan-question-number">${String(index + 1).padStart(2, "0")}</span><span class="plan-question-text"><b>${escapeHtml(question.selectedReference || "计划题目")}</b><span>${escapeHtml(question.part || "IELTS Speaking")}</span></span></label>`).join("");
+      list.querySelectorAll("[data-plan-question-id]").forEach((input) => input.addEventListener("change", () => {
+        selectedPlanQuestionIds = [...list.querySelectorAll("[data-plan-question-id]:checked")].map((item) => item.dataset.planQuestionId);
+        updateSelectedPlanPart(planItem);
+      }));
+    }
+    function startPlanItem(planItem) {
+      const remaining = incompletePlanQuestions(planItem);
+      selectedRoute = "question";
+      selectedPlanItemId = planItem.id;
+      selectedPlanQuestionIds = remaining.slice(0, 2).map((question) => question.id);
+      selectedLength = "standard";
+      updateSelectedPlanPart(planItem);
+      document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.toggle("selected", item.dataset.routeChoice === selectedRoute));
+      document.querySelectorAll(".part-choice").forEach((item) => item.classList.toggle("selected", item.dataset.part === selectedPart));
+      document.querySelectorAll(".length-choice").forEach((item) => item.classList.toggle("selected", item.dataset.length === selectedLength));
+      renderPlanQuestionChoices(planItem);
+      openVoiceModal();
+    }
+    function renderTodayPlan(plan) {
+      const button = document.getElementById("today-plan-route");
+      button.className = "today-plan-route";
+      button.replaceChildren();
+      button.onclick = null;
+      if (!plan?.items?.length) return;
+      const today = new Date();
+      const todayItem = plan.items.find((item) => sameLocalDay(new Date(`${item.date}T00:00:00`), today));
+      if (!todayItem) {
+        button.classList.add("visible");
+        button.innerHTML = '<span class="today-plan-icon">✓</span><span class="today-plan-copy"><b>今日计划：休息或自由练习</b><span>今天没有计划题目，可以自由选题；完整安排仍保留在学习计划中。</span></span><span class="today-plan-action">查看计划</span>';
+        button.onclick = () => showView("plan");
+        return;
+      }
+      const plannedQuestions = Array.isArray(todayItem.questions) ? todayItem.questions : [];
+      const questionCount = Number(todayItem.questionCount || plannedQuestions.length || 1);
+      const completedCount = planItemCompletedCount(todayItem);
+      const remainingQuestions = incompletePlanQuestions(todayItem);
+      const remainingCount = remainingQuestions.length;
+      const preview = remainingQuestions.slice(0, 2).map((question) => question.selectedReference).filter(Boolean).join(" · ");
+      const extra = Math.max(0, remainingCount - 2);
+      const partLabel = todayItem.part === "Full mock" ? "Part 1、2、3" : todayItem.part;
+      const done = remainingCount === 0 || todayItem.status === "completed";
+      button.classList.add("visible");
+      if (done) button.classList.add("completed");
+      button.innerHTML = `<span class="today-plan-icon">${done ? "✓" : "▦"}</span><span class="today-plan-copy"><b>今日计划 · Day ${Number(todayItem.day) || 1} · 已完成${completedCount}/${questionCount}题 · ${escapeHtml(partLabel)}</b><span>${escapeHtml(preview || todayItem.selectedReference || "完成今天的计划题目")}${extra ? ` · 另${extra}题` : ""}</span></span><span class="today-plan-action">${done ? "今日已完成" : `选择本次题目（剩${remainingCount}） →`}</span>`;
+      if (!done) button.onclick = () => startPlanItem(todayItem);
+    }
+    function renderHomeSummary(data, completed) {
+      const weekStart = startOfWeek();
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 7);
+      const thisWeek = completed.filter((item) => {
+        const time = new Date(item.completedAt || item.startedAt);
+        return time >= weekStart && time < weekEnd;
+      });
+      const weeklyTarget = Number(data.plan?.weeklyTarget) || 5;
+      document.getElementById("week-session-count").textContent = thisWeek.length;
+      document.getElementById("week-session-goal").textContent = `/ ${weeklyTarget} 次目标`;
+      document.getElementById("week-speaking-time").textContent = `${thisWeek.reduce((sum, item) => sum + sessionMinutes(item), 0)}m`;
+      const improved = (data.issues || []).filter((item) => ["improved", "stable"].includes(item.status)).length;
+      document.getElementById("improved-count").textContent = improved;
+      const labels = ["一", "二", "三", "四", "五", "六", "日"];
+      const today = new Date();
+      document.getElementById("week-bars").innerHTML = labels.map((label, index) => {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + index);
+        const count = thisWeek.filter((item) => sameLocalDay(new Date(item.completedAt || item.startedAt), date)).length;
+        const height = count ? Math.min(95, 42 + (count - 1) * 24) : 8;
+        return `<div class="bar-wrap"><div class="bar${count ? " done" : ""}${sameLocalDay(date, today) ? " today" : ""}" style="height:${height}%" title="${count}次训练"></div><span class="bar-label">${sameLocalDay(date, today) ? "今" : label}</span></div>`;
+      }).join("");
+      const statusLabel = { new: "新问题", training: "训练中", improved: "初步改善", stable: "已稳定" };
+      const issueItems = [...(data.issues || [])].sort((a, b) => new Date(b.lastSeenAt) - new Date(a.lastSeenAt)).slice(0, 3);
+      document.getElementById("home-issues").innerHTML = issueItems.length ? issueItems.map((item, index) => `<div class="target-row"><span class="target-number">${String(index + 1).padStart(2, "0")}</span><div class="target-copy"><b>${escapeHtml(item.label)}</b><span>出现${Number(item.count) || 1}次 · 最近${escapeHtml(new Date(item.lastSeenAt).toLocaleDateString("zh-CN"))}</span></div><span class="status-tag ${item.status === "improved" || item.status === "stable" ? "improved" : item.status === "new" ? "new" : "training"}">${statusLabel[item.status] || "训练中"}</span></div>`).join("") : '<div class="empty-state"><h3>还没有问题变化记录</h3><p>完成训练并生成复盘后，这里会按真实出现次数更新。</p></div>';
+      document.getElementById("home-recent-sessions").innerHTML = completed.slice(0, 3).map((item) => `<div class="session-item"><div class="session-left"><span class="part-badge">${escapeHtml(String(item.part || "练习").replace("Part ", "P"))}</span><div class="session-copy"><b>${escapeHtml(item.selectedReference || "自由训练")}${item.recording ? '<span class="recording-badge">可回听</span>' : ""}</b><span>${relativeSessionDate(item)} · ${sessionMinutes(item)}分钟</span></div></div><span class="session-arrow">›</span></div>`).join("") || '<div class="empty-state"><h3>还没有最近练习</h3><p>完成第一次训练后会自动显示。</p></div>';
+    }
+    function recordingPlayerHtml(item) {
+      if (!item?.recording) return "";
+      const source = `/api/recordings/${encodeURIComponent(item.id)}?saved=${encodeURIComponent(item.recording.savedAt || "")}`;
+      return `<div class="recording-player"><span class="recording-label">回听我的回答</span><audio controls preload="metadata" src="${source}">你的系统暂不支持音频播放。</audio><button class="recording-delete" type="button" data-delete-recording="${escapeHtml(item.id)}">删除录音</button></div>`;
+    }
+    function renderActiveRetrain() {
+      const target = activeRetrainTarget;
+      const relatedQuestion = target ? questions.find((item) => item.part === target.part && item.prompt && item.prompt !== target.question)?.prompt : "";
+      const stepContent = {
+        1: { question: "先对照上次原回答与高分建议答案", frame: target ? `<b>我的原回答：</b><br>${escapeHtml(target.originalAnswer || "未记录")}<br><br><b>高分建议答案：</b><br>${escapeHtml(target.revisedAnswer || "未生成")}` : "", button: "下一步：重答原题" },
+        2: { question: target?.question || "等待最近一份复盘中的真实问题", frame: target?.revisedAnswer ? `<b>回答提示：</b><br>${escapeHtml(target.revisedAnswer)}<br><br>保留自己的事实和观点，不要求逐字背诵。` : "<b>回答提示：</b><br>围绕本次单一目标重新回答。", button: "● 开始重答原题" },
+        3: { question: target?.question || "等待最近一份复盘中的真实问题", frame: "<b>本轮不显示建议答案。</b><br>请自然回答同一道题，并有意识地使用本次改进目标。", button: "● 开始无提示重答" },
+        4: { question: relatedQuestion || target?.question || "暂无可用于验证的新题", frame: "<b>换题验证：</b><br>不要复述上一题的答案，只迁移同一个表达或结构改进点。", button: "● 开始换题验证" }
+      }[activeRetrainStep];
+      document.getElementById("retrain-status").textContent = target ? "待复训 · 来自真实复盘" : "暂无复训目标";
+      document.getElementById("retrain-title").textContent = target?.description || "完成一次复盘后，这里会生成具体复训目标";
+      document.getElementById("retrain-reason").textContent = target?.reason || "系统会从你真实回答中的逻辑、重复习惯和表达问题里，只选择一个目标。";
+      document.querySelectorAll("[data-retrain-step]").forEach((item) => item.classList.toggle("active", Number(item.dataset.retrainStep) === activeRetrainStep));
+      document.getElementById("retrain-question").textContent = stepContent.question;
+      document.getElementById("retrain-answer-frame").innerHTML = stepContent.frame;
+      document.getElementById("start-retrain").disabled = !target;
+      document.getElementById("start-retrain").textContent = target ? stepContent.button : "暂无可开始的复训";
+      if (target) target.validationQuestion = relatedQuestion || target.question;
+    }
+    function recordingPlaybackInProgress() {
+      return [...document.querySelectorAll(".recording-player audio")].some((audio) => !audio.paused && !audio.ended);
+    }
+    document.addEventListener("loadedmetadata", (event) => {
+      const audio = event.target;
+      if (!(audio instanceof HTMLAudioElement) || !audio.closest(".recording-player") || Number.isFinite(audio.duration)) return;
+      audio.currentTime = Number.MAX_SAFE_INTEGER;
+      audio.addEventListener("timeupdate", () => { audio.currentTime = 0; }, { once: true });
+    }, true);
+    function bindRecordingActions(container) {
+      container.querySelectorAll("[data-delete-recording]").forEach((button) => button.addEventListener("click", async () => {
+        if (!window.confirm("确定删除这次训练的本地录音吗？删除后无法恢复。")) return;
+        button.disabled = true;
+        try {
+          const response = await fetch("/api/recordings/delete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId: button.dataset.deleteRecording }) });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || "删除失败");
+          await loadDashboardData();
+          showToast("这次训练的录音已从本机删除");
+        } catch (error) {
+          button.disabled = false;
+          showToast(`删除录音失败：${error.message}`, 4200);
+        }
+      }));
+    }
+    function renderLearningData(data) {
+      const completed = (data.sessions || []).filter((item) => item.status === "completed").sort((a, b) => sessionTime(b) - sessionTime(a));
+      retrainTargets = new Map(completed.map((item) => [item.id, retrainTargetForSession(item)]).filter(([, target]) => target));
+      if (!activeRetrainTarget || !retrainTargets.has(activeRetrainTarget.sourceSessionId)) activeRetrainTarget = retrainTargets.values().next().value || null;
+      renderActiveRetrain();
+      renderHomeSummary(data, completed);
+      renderTodayPlan(data.plan);
+      const reviewed = completed.filter((item) => item.report && typeof item.report === "object");
+      const reportDateList = document.getElementById("report-date-list");
+      const standaloneReportGrid = document.getElementById("report-grid");
+      if (reviewed.length) {
+        const dateGroups = new Map();
+        reviewed.forEach((item) => {
+          const dateLabel = formatFullDate(item);
+          if (!dateGroups.has(dateLabel)) dateGroups.set(dateLabel, []);
+          dateGroups.get(dateLabel).push(item);
+        });
+        document.getElementById("report-subtitle").textContent = `共 ${reviewed.length} 份复盘，归入 ${dateGroups.size} 个日期；默认展开最近一天。`;
+        standaloneReportGrid.style.display = "none";
+        reportDateList.innerHTML = [...dateGroups].map(([dateLabel, sessions], index) => {
+          const feedbackCount = sessions.reduce((total, item) => {
+            const report = item.report || {};
+            return total + [report.must_correct, report.natural_upgrades, report.repeated_habits, report.logic_feedback, report.vocabulary_upgrades].reduce((sum, list) => sum + (Array.isArray(list) ? list.length : 0), 0);
+          }, 0);
+          const dialogueCount = sessions.reduce((sum, item) => sum + (item.transcript || []).length, 0);
+          const summaryText = sessions.length === 1 ? `${sessions[0].part} · ${sessions[0].selectedReference || "自由训练"}` : `当天共 ${sessions.length} 次训练`;
+          const sessionHtml = sessions.map((item) => `<section class="daily-report-session"><div class="daily-session-heading"><b>${escapeHtml(item.part)} · ${escapeHtml(item.selectedReference || "自由训练")}</b><span>${(item.transcript || []).length}条对话</span></div>${recordingPlayerHtml(item)}${reportSessionContent(item)}</section>`).join("");
+          return `<details class="report-accordion" ${index === 0 ? "open" : ""}><summary><span class="accordion-chevron">›</span><span class="accordion-title"><b>${escapeHtml(dateLabel)}</b><span>${escapeHtml(summaryText)}</span></span><span class="accordion-meta">${feedbackCount}项反馈 · ${dialogueCount}条对话</span></summary><div class="report-accordion-body">${sessionHtml}</div></details>`;
+        }).join("");
+        reportDateList.querySelectorAll("[data-view-link]").forEach((button) => button.addEventListener("click", () => {
+          if (button.dataset.retrainSessionId) {
+            activeRetrainTarget = retrainTargets.get(button.dataset.retrainSessionId) || activeRetrainTarget;
+            activeRetrainStep = 1;
+            renderActiveRetrain();
+          }
+          showView(button.dataset.viewLink);
+        }));
+        bindReportQuestionActions(reportDateList);
+        bindRecordingActions(reportDateList);
+      } else {
+        reportDateList.innerHTML = "";
+        document.getElementById("report-subtitle").textContent = "还没有完成的训练复盘。完成第一次 Voice 训练后，报告会自动显示在这里。";
+        standaloneReportGrid.style.display = "grid";
+        standaloneReportGrid.innerHTML = '<article class="generic-card"><h3>完成第一次Voice训练后，这里会出现固定格式报告</h3><p>包括必须纠错、自然表达、重复习惯、逻辑展开、词汇升级、回答建议和一个可选复训目标。</p></article>';
+      }
+      const monthGroups = new Map();
+      completed.forEach((item) => {
+        const date = new Date(item.completedAt || item.startedAt);
+        const key = `${date.getFullYear()}年${date.getMonth() + 1}月`;
+        if (!monthGroups.has(key)) monthGroups.set(key, []);
+        monthGroups.get(key).push(item);
+      });
+      const historyGrid = document.getElementById("history-grid");
+      historyGrid.innerHTML = completed.length ? [...monthGroups].map(([month, items]) => `<section class="history-month"><h3 class="history-month-title">${escapeHtml(month)}</h3><div class="history-month-list">${items.map((item) => `<article class="generic-card"><h3>${escapeHtml(formatFullDate(item))} · ${escapeHtml(item.part)}</h3><p>${escapeHtml(item.selectedReference || "自由训练")}｜${(item.transcript || []).length} 条对话｜${item.report ? "已有复盘" : "仅保存记录"}</p>${recordingPlayerHtml(item)}</article>`).join("")}</div></section>`).join("") : '<article class="generic-card"><h3>暂无训练记录</h3><p>完成的Voice训练会自动沉淀在这里。</p></article>';
+      bindRecordingActions(historyGrid);
+      const issueStatusLabels = { new: "新问题", training: "训练中", improved: "初步改善", stable: "已稳定" };
+      document.getElementById("issues-grid").innerHTML = (data.issues || []).length ? data.issues.map((item) => `<article class="generic-card"><span class="status-tag ${item.status === "improved" || item.status === "stable" ? "improved" : item.status === "new" ? "new" : "training"}">${issueStatusLabels[item.status] || "训练中"}</span><h3 style="margin-top:14px;">${escapeHtml(item.label)}</h3><p>出现${item.count}次｜最近：${escapeHtml(new Date(item.lastSeenAt).toLocaleDateString("zh-CN"))}｜${escapeHtml(item.category)}</p></article>`).join("") : '<article class="generic-card"><h3>问题档案还是空的</h3><p>系统只保存你真实说过、并有转写证据的问题。</p></article>';
+      document.getElementById("vocab-grid").innerHTML = (data.vocabulary || []).length ? data.vocabulary.map((item) => `<article class="generic-card"><h3>${escapeHtml(item.term)}</h3><p>${escapeHtml(item.meaning || "来自本次表达升级")}<br><b>出现：</b>${item.count}次｜<b>状态：</b>${escapeHtml(item.familiarity)}</p></article>`).join("") : '<article class="generic-card"><h3>词汇档案还是空的</h3><p>复盘中与你真实表达相关的升级词汇会自动进入这里。</p></article>';
+      renderPlan(data.plan);
+      renderPlanView(data.plan);
+    }
+    function updateSelectionSummary() {
+      const question = questions.find((item) => item.id === selectedQuestionId);
+      const planItem = currentPlan?.items?.find((item) => item.id === selectedPlanItemId);
+      selectionSummary.textContent = planItem
+        ? `学习计划 Day ${planItem.day} · 本次已选 ${selectedPlanQuestionIds.length} 道 · 今日尚未完成 ${incompletePlanQuestions(planItem).length} 道`
+        : selectedRoute === "report-question"
+          ? `${routeLabels[selectedRoute]} · ${selectedPart} · ${selectedReportQuestion}`
+          : `${routeLabels[selectedRoute]} · ${selectedPart} · ${lengthLabels[selectedLength]}${question ? ` · ${question.topic}` : ""}`;
+      document.getElementById("voice-prompt").textContent = planItem
+        ? (selectedPlanQuestionIds.length ? "保存后只会按顺序训练这次勾选的题目" : "请至少勾选一道题目")
+        : selectedRoute === "report-question" ? "保存后只训练这一道复盘题目" : "保存后即可按这道题进入训练";
+      questionField.classList.toggle("visible", selectedRoute === "question" && !selectedPlanItemId);
+    }
+
+    function refreshQuestionSelect() {
+      const filtered = questions.filter((item) => item.part === selectedPart);
+      questionSelect.innerHTML = filtered.length
+        ? filtered.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.prompt)}</option>`).join("")
+        : '<option value="">当前 Part 暂无题目</option>';
+      if (!filtered.some((item) => item.id === selectedQuestionId)) {
+        selectedQuestionId = filtered[0]?.id || "";
+      }
+      questionSelect.value = selectedQuestionId;
+      updateSelectionSummary();
+    }
+
+    function renderQuestionBank() {
+      const part = document.getElementById("bank-part").value;
+      const search = document.getElementById("bank-search").value.trim().toLowerCase();
+      const filtered = questions.filter((item) => {
+        if (part && item.part !== part) return false;
+        return !search || `${item.topic} ${item.prompt} ${item.label}`.toLowerCase().includes(search);
+      });
+      const promptLines = (item) => item.importLevel === "full-question"
+        ? [item.prompt, ...(Array.isArray(item.followups) ? item.followups : [])].filter(Boolean)
+        : [];
+      const partStats = ["Part 1", "Part 2", "Part 3"].map((partName) => {
+        const partItems = questions.filter((item) => item.part === partName);
+        return {
+          part: partName,
+          topicCount: partItems.length,
+          concreteCount: partItems.reduce((sum, item) => sum + promptLines(item).length, 0)
+        };
+      });
+      document.getElementById("bank-part-stats").innerHTML = partStats.map((item) => `<div class="bank-part-stat"><b>${escapeHtml(item.part)} · ${item.topicCount} 个题组</b><span>${item.concreteCount ? `已收录 ${item.concreteCount} 个具体问题` : "当前来源仅有题组目录，具体问题待导入"}</span></div>`).join("");
+      const filteredConcreteCount = filtered.reduce((sum, item) => sum + promptLines(item).length, 0);
+      document.getElementById("bank-summary").textContent = `当前显示 ${filtered.length} 个题组${filteredConcreteCount ? ` · 共 ${filteredConcreteCount} 个具体问题` : " · 具体问题待导入"}`;
+      document.getElementById("bank-list").innerHTML = filtered.map((item) => `
+        <article class="bank-item">
+          <span class="part-badge">${item.part.replace("Part ", "P")}</span>
+          <div><h3>${escapeHtml(item.topic)}</h3><p>${escapeHtml(item.label || "题库主题")} · ${escapeHtml(item.note || (item.importLevel === "full-question" ? "完整题目" : "题组目录"))}</p><div class="bank-item-meta"><span>${promptLines(item).length ? `${promptLines(item).length} 个具体问题` : "尚无具体问题"}</span></div></div>
+          <button class="bank-use" data-question-id="${escapeHtml(item.id)}">选择训练</button>
+          ${promptLines(item).length ? `<ol class="bank-question-list">${promptLines(item).map((question) => `<li>${escapeHtml(question)}</li>`).join("")}</ol>` : `<div class="bank-question-missing">当前导入文件只包含这个题组的名称，没有提供英文问题正文。选择训练时会按该主题出题；导入完整版题库后，这里会逐条显示问题。</div>`}
+        </article>
+      `).join("") || '<article class="generic-card"><h3>没有匹配题目</h3><p>请更换 Part 或搜索词。</p></article>';
+      document.querySelectorAll("[data-question-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const question = questions.find((item) => item.id === button.dataset.questionId);
+          if (!question) return;
+          selectedPlanItemId = "";
+          selectedReportQuestion = "";
+          selectedRoute = "question";
+          selectedPart = question.part;
+          selectedQuestionId = question.id;
+          document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.toggle("selected", item.dataset.routeChoice === selectedRoute));
+          document.querySelectorAll(".part-choice").forEach((item) => item.classList.toggle("selected", item.dataset.part === selectedPart));
+          refreshQuestionSelect();
+          openVoiceModal();
+        });
+      });
+    }
+
+    function bindReportQuestionActions(container) {
+      container.querySelectorAll("[data-retrain-question]").forEach((button) => button.addEventListener("click", () => {
+        selectedPlanItemId = "";
+        selectedPlanQuestionIds = [];
+        selectedQuestionId = "";
+        selectedReportQuestion = button.dataset.retrainQuestion || "";
+        selectedRoute = "report-question";
+        selectedPart = button.dataset.retrainPart || "Part 3";
+        selectedLength = "standard";
+        document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.remove("selected"));
+        document.querySelectorAll(".part-choice").forEach((item) => item.classList.toggle("selected", item.dataset.part === selectedPart));
+        document.querySelectorAll(".length-choice").forEach((item) => item.classList.toggle("selected", item.dataset.length === selectedLength));
+        updateSelectionSummary();
+        openVoiceModal();
+      }));
+      container.querySelectorAll("[data-regenerate-answer-upgrades]").forEach((button) => button.addEventListener("click", async () => {
+        if (!desktopApi?.regenerateAnswerUpgrades) {
+          showToast("请在桌面应用中重新生成回答建议", 4200);
+          return;
+        }
+        const originalText = button.textContent;
+        button.disabled = true;
+        button.textContent = "正在重新生成…";
+        try {
+          const result = await desktopApi.regenerateAnswerUpgrades(button.dataset.regenerateAnswerUpgrades);
+          await loadDashboardData();
+          showToast(`已补全 ${result.answerUpgradeCount || 0} 条回答建议`, 5000);
+        } catch (error) {
+          button.disabled = false;
+          button.textContent = originalText;
+          showToast(`重新生成失败：${error.message}`, 6000);
+        }
+      }));
+    }
+
+    document.querySelectorAll(".route-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        selectedPlanItemId = "";
+        selectedReportQuestion = "";
+        selectedRoute = button.dataset.route;
+        document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.toggle("selected", item.dataset.routeChoice === selectedRoute));
+        updateSelectionSummary();
+        if (selectedRoute === "question") refreshQuestionSelect();
+        openVoiceModal();
+      });
+    });
+    document.getElementById("start-retrain").addEventListener("click", () => {
+      if (activeRetrainStep === 1) {
+        activeRetrainStep = 2;
+        renderActiveRetrain();
+        return;
+      }
+      selectedPlanItemId = "";
+      selectedReportQuestion = activeRetrainStep === 4 ? (activeRetrainTarget?.validationQuestion || "") : (activeRetrainTarget?.question || "");
+      selectedRoute = selectedReportQuestion ? "report-question" : "review";
+      selectedPart = activeRetrainTarget?.part || "Part 3";
+      document.getElementById("single-goal").value = activeRetrainTarget?.description || "";
+      document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.toggle("selected", item.dataset.routeChoice === selectedRoute));
+      document.querySelectorAll(".part-choice").forEach((item) => item.classList.toggle("selected", item.dataset.part === selectedPart));
+      updateSelectionSummary();
+      openVoiceModal();
+    });
+    document.querySelectorAll("[data-retrain-step]").forEach((item) => {
+      const activate = () => { activeRetrainStep = Number(item.dataset.retrainStep) || 1; renderActiveRetrain(); };
+      item.addEventListener("click", activate);
+      item.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); activate(); }
+      });
+    });
+    document.getElementById("close-modal").addEventListener("click", closeVoiceModal);
+    document.getElementById("cancel-selection").addEventListener("click", closeVoiceModal);
+    function closePlanModal() { planModal.classList.remove("open"); }
+    document.getElementById("plan-entry").addEventListener("click", () => showView("plan"));
+    document.getElementById("edit-plan").addEventListener("click", () => planModal.classList.add("open"));
+    document.getElementById("close-plan-modal").addEventListener("click", closePlanModal);
+    document.getElementById("cancel-plan").addEventListener("click", closePlanModal);
+    document.querySelectorAll(".plan-length-choice").forEach((button) => button.addEventListener("click", () => {
+      document.querySelectorAll(".plan-length-choice").forEach((item) => item.classList.remove("selected"));
+      button.classList.add("selected");
+      selectedPlanLength = Number(button.dataset.planLength);
+    }));
+    document.getElementById("save-plan").addEventListener("click", async () => {
+      const button = document.getElementById("save-plan");
+      button.disabled = true;
+      button.textContent = "正在生成…";
+      try {
+        const response = await fetch("/api/plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lengthDays: selectedPlanLength,
+            weeklyTarget: Number(document.getElementById("plan-weekly-target").value),
+            focus: document.getElementById("plan-focus").value
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "计划生成失败");
+        closePlanModal();
+        await loadDashboardData();
+        showView("plan");
+        showToast(`已生成${result.plan.lengthDays}天计划：共${result.plan.questionCount}题，分配到${result.plan.items.length}个训练日`, 4800);
+      } catch (error) {
+        showToast(`计划生成失败：${error.message}`, 4200);
+      } finally {
+        button.disabled = false;
+        button.textContent = "生成计划";
+      }
+    });
+
+    document.querySelectorAll("[data-route-choice]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedPlanItemId = "";
+        selectedReportQuestion = "";
+        selectedRoute = button.dataset.routeChoice;
+        if (selectedRoute === "question") refreshQuestionSelect();
+        updateSelectionSummary();
+      });
+    });
+
+    document.querySelectorAll(".part-choice").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".part-choice").forEach((item) => item.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedPlanItemId = "";
+        selectedPart = button.dataset.part;
+        refreshQuestionSelect();
+        updateSelectionSummary();
+      });
+    });
+
+    questionSelect.addEventListener("change", () => {
+      selectedPlanItemId = "";
+      selectedQuestionId = questionSelect.value;
+      updateSelectionSummary();
+    });
+    document.getElementById("bank-part").addEventListener("change", renderQuestionBank);
+    document.getElementById("bank-search").addEventListener("input", renderQuestionBank);
+    document.getElementById("bank-start").addEventListener("click", () => {
+      selectedPlanItemId = "";
+      selectedReportQuestion = "";
+      selectedRoute = "question";
+      selectedPart = document.getElementById("bank-part").value || "Part 1";
+      document.querySelectorAll("[data-route-choice]").forEach((item) => item.classList.toggle("selected", item.dataset.routeChoice === selectedRoute));
+      document.querySelectorAll(".part-choice").forEach((item) => item.classList.toggle("selected", item.dataset.part === selectedPart));
+      refreshQuestionSelect();
+      openVoiceModal();
+    });
+
+    document.getElementById("plan-select-all").addEventListener("click", () => {
+      const planItem = currentPlan?.items?.find((item) => item.id === selectedPlanItemId);
+      if (!planItem) return;
+      selectedPlanQuestionIds = incompletePlanQuestions(planItem).map((question) => question.id);
+      renderPlanQuestionChoices(planItem);
+      updateSelectedPlanPart(planItem);
+    });
+    document.getElementById("plan-clear-all").addEventListener("click", () => {
+      const planItem = currentPlan?.items?.find((item) => item.id === selectedPlanItemId);
+      if (!planItem) return;
+      selectedPlanQuestionIds = [];
+      renderPlanQuestionChoices(planItem);
+      updateSelectedPlanPart(planItem);
+    });
+
+    document.querySelectorAll(".length-choice").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".length-choice").forEach((item) => item.classList.remove("selected"));
+        button.classList.add("selected");
+        selectedLength = button.dataset.length;
+        updateSelectionSummary();
+      });
+    });
+
+    function showToast(message, duration = 2600) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), duration);
+    }
+
+    async function loadDashboardData() {
+      try {
+        const response = await fetch("/api/dashboard", { cache: "no-store" });
+        if (!response.ok) throw new Error("本地服务未响应");
+        const data = await response.json();
+        recordingEnabledInput.checked = Boolean(data.recordingEnabled);
+        const learnerName = data.learner?.displayName?.trim() || "同学";
+        const hour = new Date().getHours();
+        const greeting = hour < 11 ? "早上好" : hour < 18 ? "下午好" : "晚上好";
+        viewNames.home = `${greeting}，${learnerName}`;
+        document.getElementById("today-label").textContent = new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" }).format(new Date()).toUpperCase().replace(",", " ·");
+        if (document.getElementById("view-home").classList.contains("active")) {
+          document.getElementById("page-title").textContent = viewNames.home;
+        }
+        questions = data.questions || [];
+        refreshQuestionSelect();
+        renderQuestionBank();
+        const source = data.questionSources?.[0];
+        document.getElementById("bank-source").textContent = source
+          ? `${source.title}｜已导入 ${source.questionCount} 个可选主题（目录级；音频与子问题待补充）`
+          : "尚未导入题库";
+        document.getElementById("total-sessions").textContent = data.sessions.filter((item) => item.status === "completed").length;
+        try {
+          if (!recordingPlaybackInProgress()) renderLearningData(data);
+        } catch (renderError) {
+          console.error("学习档案渲染失败", renderError);
+        }
+        document.getElementById("connection-status").innerHTML = '<span class="dot"></span>本地档案已连接';
+      } catch (error) {
+        console.error("仪表盘数据加载失败", error);
+        document.getElementById("connection-status").innerHTML = '<span class="dot" style="background:#e35d6a"></span>本地档案读取失败';
+      }
+    }
+
+    recordingEnabledInput.addEventListener("change", async () => {
+      const enabled = recordingEnabledInput.checked;
+      recordingEnabledInput.disabled = true;
+      try {
+        const response = await fetch("/api/settings/recording", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled }) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "设置保存失败");
+        showToast(enabled ? "已开启：下一次训练会保存你的麦克风回答" : "已关闭：之后的训练不再保存录音", 4200);
+      } catch (error) {
+        recordingEnabledInput.checked = !enabled;
+        showToast(`录音设置保存失败：${error.message}`, 4200);
+      } finally {
+        recordingEnabledInput.disabled = false;
+      }
+    });
+
+    document.getElementById("save-selection").addEventListener("click", async () => {
+      const saveButton = document.getElementById("save-selection");
+      saveButton.disabled = true;
+      saveButton.textContent = "正在保存…";
+      try {
+        if (selectedPlanItemId && !selectedPlanQuestionIds.length) throw new Error("请至少勾选一道本次要练的题目");
+        const response = await fetch("/api/training-selection", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            route: routeValues[selectedRoute],
+            part: selectedPart,
+            length: selectedLength,
+            questionId: selectedRoute === "question" ? selectedQuestionId : "",
+            questionIds: selectedPlanItemId ? selectedPlanQuestionIds : [],
+            planItemId: selectedPlanItemId,
+            selectedReference: selectedRoute === "report-question" ? selectedReportQuestion : "",
+            singleGoal: document.getElementById("single-goal").value.trim()
+          })
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "保存失败");
+        closeVoiceModal();
+        if (desktopApi) {
+          showToast("选题已保存，正在打开ChatGPT Voice…", 4200);
+          const started = await desktopApi.startTraining(result.session);
+          if (started.needsLogin) showToast("请先在弹出的ChatGPT窗口登录，登录后再次点击启动", 6000);
+          else if (!started.voiceStarted) showToast("训练指令已发送，请在ChatGPT窗口手动点击Voice", 6000);
+        } else {
+          showToast(`已保存：${result.session.selectedReference || selectedPart}。请在桌面版中一键启动Voice。`, 5200);
+        }
+        await loadDashboardData();
+      } catch (error) {
+        showToast(`保存失败：${error.message}`, 3600);
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = desktopApi ? "保存并一键启动Voice" : "确认并保存选题";
+      }
+    });
+
+    loadDashboardData();
+    window.addEventListener("focus", () => loadDashboardData());
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") loadDashboardData();
+    });
+    setInterval(() => {
+      if (document.visibilityState === "visible") loadDashboardData();
+    }, 15000);
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+  "name": "ielts-speaking-coach",
+  "version": "0.1.48",
+  "description": "Run structured IELTS speaking practice with ChatGPT Voice, fixed-format reviews, and one-target retraining.",
+  "author": {
+    "name": "IELTS Speaking Coach contributors"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ielts",
+    "speaking",
+    "voice",
+    "practice",
+    "retraining"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "IELTS Speaking Coach",
+    "shortDescription": "Voice practice, structured reviews, and focused retraining.",
+    "longDescription": "Turn ChatGPT Voice into a repeatable IELTS speaking practice workflow. Import questions, choose a Part, generate a plan, review evidence-backed feedback, and retrain one priority weakness at a time.",
+    "developerName": "IELTS Speaking Coach contributors",
+    "category": "Education",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "brandColor": "#6957E8",
+    "defaultPrompt": [
+      "Start today\u2019s IELTS speaking practice.",
+      "Create a 14-day plan from my question bank.",
+      "Review my latest session and start focused retraining."
+    ]
+  }
+}
