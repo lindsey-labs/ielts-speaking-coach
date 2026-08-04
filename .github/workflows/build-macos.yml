@@ -58,6 +58,14 @@ jobs:
             echo "release_tag is required when publish_release is enabled." >&2
             exit 1
           fi
+          if [[ "${{ inputs.publish_release }}" == "true" ]]; then
+            for required_secret in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+              if [[ -z "${!required_secret}" ]]; then
+                echo "Formal macOS releases require $required_secret for Apple signing and notarization." >&2
+                exit 1
+              fi
+            done
+          fi
 
       - name: Check out source
         uses: actions/checkout@v4
