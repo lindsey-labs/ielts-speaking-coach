@@ -48,6 +48,7 @@ jobs:
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      QUESTION_BANK_BASE64: ${{ secrets.MAC_QUESTION_BANK_BASE64 }}
 
     steps:
       - name: Check release inputs
@@ -68,6 +69,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - name: Restore the private release question bank
+        shell: bash
+        run: |
+          node -e "const fs = require('node:fs'); const encoded = process.env.QUESTION_BANK_BASE64; if (!encoded) throw new Error('Missing MAC_QUESTION_BANK_BASE64 repository secret.'); const output = 'mcp/question-bank-2026-may-aug.json'; fs.writeFileSync(output, Buffer.from(encoded, 'base64')); JSON.parse(fs.readFileSync(output, 'utf8'));"
 
       - name: Install dependencies
         run: npm ci
