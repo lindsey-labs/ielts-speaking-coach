@@ -18,6 +18,11 @@ on:
         required: true
         default: false
         type: boolean
+      allow_unsigned_release:
+        description: Allow an explicitly requested unsigned direct-download release
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -58,10 +63,10 @@ jobs:
             echo "release_tag is required when publish_release is enabled." >&2
             exit 1
           fi
-          if [[ "${{ inputs.publish_release }}" == "true" ]]; then
+          if [[ "${{ inputs.publish_release }}" == "true" && "${{ inputs.allow_unsigned_release }}" != "true" ]]; then
             for required_secret in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
               if [[ -z "${!required_secret}" ]]; then
-                echo "Formal macOS releases require $required_secret for Apple signing and notarization." >&2
+                echo "Formal macOS releases require $required_secret for Apple signing and notarization. To publish a deliberately unsigned local-use build, set allow_unsigned_release to true." >&2
                 exit 1
               fi
             done
