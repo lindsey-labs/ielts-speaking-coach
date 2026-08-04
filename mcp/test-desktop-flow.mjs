@@ -30,6 +30,11 @@ try {
   await waitForHealth()
   const initialDashboard = await (await fetch(`${base}/api/dashboard`)).json()
   const availableQuestions = initialDashboard.questions || []
+  const upgradeConfigResponse = await fetch(`${base}/api/upgrade-config`)
+  const upgradeConfig = await upgradeConfigResponse.json()
+  if (!upgradeConfigResponse.ok || upgradeConfig.websiteUrl !== 'https://tools.blueberrywriting.com/projects/ielts-speaking-coach/updates') {
+    throw new Error('Feature upgrade link was not configured correctly.')
+  }
   const profileResponse = await fetch(`${base}/api/profile`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName: '  Sample Learner  ' })
   })
