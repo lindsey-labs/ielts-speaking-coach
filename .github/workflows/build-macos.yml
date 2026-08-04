@@ -100,7 +100,7 @@ jobs:
       - name: Build DMG and ZIP
         shell: bash
         run: |
-          build_args=(--mac dmg zip --${{ matrix.arch }})
+          build_args=(--mac dmg zip --${{ matrix.arch }} --publish never)
           if [[ -z "$CSC_LINK" ]]; then
             echo "Apple signing certificate is absent; producing an unsigned test build."
             build_args+=(--config.mac.identity=null --config.mac.hardenedRuntime=false)
