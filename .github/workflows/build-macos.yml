@@ -1,0 +1,152 @@
+name: Build macOS installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Branch, tag, or commit to build
+        required: false
+        default: ""
+        type: string
+      release_tag:
+        description: Existing GitHub Release tag to receive the installers (for example v0.1.49)
+        required: false
+        default: ""
+        type: string
+      publish_release:
+        description: Upload verified installers to the GitHub Release
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-macos-${{ inputs.source_ref || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            label: Intel Mac
+            runner: macos-15-intel
+          - arch: arm64
+            label: Apple silicon Mac
+            runner: macos-15
+
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    env:
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+    steps:
+      - name: Check release inputs
+        shell: bash
+        run: |
+          if [[ "${{ inputs.publish_release }}" == "true" && -z "${{ inputs.release_tag }}" ]]; then
+            echo "release_tag is required when publish_release is enabled." >&2
+            exit 1
+          fi
+
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release tests
+        run: |
+          npm run test:review-parser
+          npm run test:answer-policy
+          npm run test:voice-end
+          npm run test:review-controls
+          npm run test:mcp
+
+      - name: Confirm package version matches release tag
+        if: ${{ inputs.publish_release }}
+        shell: bash
+        run: |
+          package_version="$(node -p "require('./package.json').version")"
+          expected_tag="v${package_version}"
+          if [[ "${{ inputs.release_tag }}" != "$expected_tag" ]]; then
+            echo "release_tag must be $expected_tag for package version $package_version." >&2
+            exit 1
+          fi
+
+      - name: Build DMG and ZIP
+        shell: bash
+        run: |
+          build_args=(--mac dmg zip --${{ matrix.arch }})
+          if [[ -z "$CSC_LINK" ]]; then
+            echo "Apple signing certificate is absent; producing an unsigned test build."
+            build_args+=(--config.mac.identity=null --config.mac.hardenedRuntime=false)
+          fi
+          npx electron-builder "${build_args[@]}"
+
+      - name: Verify artifacts
+        shell: bash
+        run: |
+          dmg="$(find release -maxdepth 1 -name '*-${{ matrix.arch }}.dmg' -print -quit)"
+          zip="$(find release -maxdepth 1 -name '*-${{ matrix.arch }}.zip' -print -quit)"
+          test -n "$dmg" && test -s "$dmg"
+          test -n "$zip" && test -s "$zip"
+          hdiutil verify "$dmg"
+
+          verify_dir="$(mktemp -d)"
+          ditto -x -k "$zip" "$verify_dir"
+          app_path="$(find "$verify_dir" -maxdepth 2 -name '*.app' -print -quit)"
+          test -n "$app_path"
+          test "$(defaults read "$app_path/Contents/Info" NSMicrophoneUsageDescription)" = "IELTS Speaking Coach needs microphone access to record your spoken practice locally."
+
+          if [[ -n "$CSC_LINK" ]]; then
+            codesign --verify --deep --strict --verbose=2 "$app_path"
+            spctl --assess --type execute --verbose=2 "$app_path"
+          fi
+
+          (
+            cd release
+            shasum -a 256 "$(basename "$dmg")" "$(basename "$zip")" > "SHA256SUMS-${{ matrix.arch }}.txt"
+          )
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IELTS-Speaking-Coach-macOS-${{ matrix.arch }}
+          path: |
+            release/*-${{ matrix.arch }}.dmg
+            release/*-${{ matrix.arch }}.zip
+            release/SHA256SUMS-${{ matrix.arch }}.txt
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload installers to GitHub Release
+        if: ${{ inputs.publish_release }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${{ inputs.release_tag }}" --repo "${{ github.repository }}"
+          gh release upload "${{ inputs.release_tag }}" \
+            release/*-${{ matrix.arch }}.dmg \
+            release/*-${{ matrix.arch }}.zip \
+            release/SHA256SUMS-${{ matrix.arch }}.txt \
+            --clobber \
+            --repo "${{ github.repository }}"
