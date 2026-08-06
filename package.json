@@ -1,6 +1,6 @@
 {
   "name": "ielts-speaking-coach-local-mcp",
-  "version": "0.1.49",
+  "version": "0.1.50",
   "private": true,
   "type": "module",
   "description": "Local MCP server for IELTS Speaking Coach practice state and review reports.",

@@ -32,7 +32,7 @@ try {
   const availableQuestions = initialDashboard.questions || []
   const upgradeConfigResponse = await fetch(`${base}/api/upgrade-config`)
   const upgradeConfig = await upgradeConfigResponse.json()
-  if (!upgradeConfigResponse.ok || upgradeConfig.websiteUrl !== 'https://tools.blueberrywriting.com/projects/ielts-speaking-coach/updates') {
+  if (!upgradeConfigResponse.ok || upgradeConfig.websiteUrl !== 'https://tools.blueberrywriting.com/') {
     throw new Error('Feature upgrade link was not configured correctly.')
   }
   const profileResponse = await fetch(`${base}/api/profile`, {
