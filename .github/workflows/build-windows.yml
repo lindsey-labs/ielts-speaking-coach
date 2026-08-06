@@ -1,0 +1,112 @@
+name: Build Windows installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Branch, tag, or commit to build
+        required: false
+        default: ""
+        type: string
+      release_tag:
+        description: Existing GitHub Release tag to receive the installer
+        required: false
+        default: ""
+        type: string
+      publish_release:
+        description: Upload the verified installer to the GitHub Release
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-windows-${{ inputs.source_ref || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      QUESTION_BANK_BASE64: ${{ secrets.MAC_QUESTION_BANK_BASE64 }}
+
+    steps:
+      - name: Check release inputs
+        shell: pwsh
+        run: |
+          if ('${{ inputs.publish_release }}' -eq 'true' -and -not '${{ inputs.release_tag }}') {
+            throw 'release_tag is required when publish_release is enabled.'
+          }
+
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Restore the private release question bank
+        shell: pwsh
+        run: |
+          if (-not $env:QUESTION_BANK_BASE64) { throw 'Missing MAC_QUESTION_BANK_BASE64 repository secret.' }
+          [IO.File]::WriteAllBytes('mcp/question-bank-2026-may-aug.json', [Convert]::FromBase64String($env:QUESTION_BANK_BASE64))
+          Get-Content 'mcp/question-bank-2026-may-aug.json' -Raw | ConvertFrom-Json | Out-Null
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run release tests
+        run: |
+          npm run test:review-parser
+          npm run test:answer-policy
+          npm run test:voice-end
+          npm run test:review-controls
+          npm run test:mcp
+          npm run test:desktop-flow
+
+      - name: Confirm package version matches release tag
+        if: ${{ inputs.publish_release }}
+        shell: pwsh
+        run: |
+          $packageVersion = node -p "require('./package.json').version"
+          $expectedTag = "v$packageVersion"
+          if ('${{ inputs.release_tag }}' -ne $expectedTag) {
+            throw "release_tag must be $expectedTag for package version $packageVersion."
+          }
+
+      - name: Build installer
+        run: npm run package:win -- --publish never
+
+      - name: Verify installer contents
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $installer = "release/IELTS-Speaking-Coach-$version-Setup.exe"
+          if (-not (Test-Path $installer) -or (Get-Item $installer).Length -eq 0) { throw 'Windows installer is missing or empty.' }
+          $config = node -e "const asar=require('@electron/asar'); process.stdout.write(asar.extractFile('release/win-unpacked/resources/app.asar','mcp/upgrade-page.json').toString())"
+          if (($config | ConvertFrom-Json).websiteUrl -ne 'https://tools.blueberrywriting.com/') { throw 'Packaged upgrade URL is incorrect.' }
+          Get-FileHash $installer -Algorithm SHA256 | Format-List
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IELTS-Speaking-Coach-Windows-x64
+          path: release/IELTS-Speaking-Coach-*-Setup.exe
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload installer to GitHub Release
+        if: ${{ inputs.publish_release }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view '${{ inputs.release_tag }}' --repo '${{ github.repository }}'
+          gh release upload '${{ inputs.release_tag }}' release/IELTS-Speaking-Coach-*-Setup.exe --clobber --repo '${{ github.repository }}'
